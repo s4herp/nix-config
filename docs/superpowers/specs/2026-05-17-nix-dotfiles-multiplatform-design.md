@@ -135,10 +135,13 @@ nix-config/
   condicionales por directorio (shinkansen / mudango), `init.defaultBranch`,
   `url.insteadOf` SSH, excludes globales.
 - **`editor/neovim.nix` (nativo-pragmático, opción 2b aprobada):** Home Manager
-  instala y **fija** Neovim; el árbol de config lua se entrega vía
-  `xdg.configFile."nvim".source` desde *este repo* (sigue versionado y
-  reproducible idéntico entre máquinas), con `lazy-lock.json` commiteado para
-  fijar versiones de los ~50 plugins. *No* se reescribe a nixvim (coste de
+  instala y **fija** Neovim; el árbol de config lua se vendoriza en *este repo*
+  desde su fuente de verdad **`github.com/s4herp/kickstart.nvim`** (fork público
+  de nvim-lua/kickstart.nvim, rama `master`) y se entrega vía
+  `xdg.configFile."nvim".source` (versionado y reproducible idéntico entre
+  máquinas), con `lazy-lock.json` commiteado para fijar versiones de los ~50
+  plugins. Nota: el `.config/nvim/` del repo `s4herp/dotfiles` es una copia
+  downstream y **no** es la fuente. *No* se reescribe a nixvim (coste de
   semanas sin valor proporcional; el objetivo real —nvim idéntico y
   reproducible— se cumple igual).
 - **`cli.nix`:** `home.packages` con el set del informe: eza, bat, fd, zoxide,
