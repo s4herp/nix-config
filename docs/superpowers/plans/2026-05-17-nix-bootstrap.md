@@ -15,23 +15,15 @@
 This is **Plan 1 of 7**, per the approved spec
 (`docs/superpowers/specs/2026-05-17-nix-dotfiles-multiplatform-design.md`):
 
-Dotfiles sources (two repos):
-- **https://github.com/s4herp/dotfiles** — PRIVATE, branch `main`, normal
-  layout (files at root mirror `$HOME`). Holds `.zshrc`/`.zshenv`/`.zprofile`/
-  `.zsh_plugins.txt`/`.tmux.conf`/`.config/ghostty`. Its `.config/nvim/` is a
-  downstream **copy** (no submodule), NOT the source of truth for Neovim.
-- **https://github.com/s4herp/kickstart.nvim** — PUBLIC fork of
-  `nvim-lua/kickstart.nvim`, branch `master`. **Source of truth for the
-  Neovim config** (Plan 3 sources nvim from here, not from dotfiles).
-
-Both reachable from Bazzite via the authenticated `gh`; no macOS-side action
-required.
+Dotfiles source: **https://github.com/s4herp/dotfiles** (private, branch
+`main`, normal layout — files at repo root mirror `$HOME`). Reachable from
+Bazzite via the authenticated `gh`/SSH; no macOS-side action required.
 
 | Plan | Spec phase | Status | Blocking input |
 |---|---|---|---|
 | **1 — Bootstrap (this)** | Phase 0 | now | none |
 | 2 — Core shell (Bazzite) | Phase 1 | later | reference cloned (Task 6 here). NOTE: `git.nix` is built from spec §6.3 documented values — the dotfiles repo does **not** contain git config (excluded for secrets). |
-| 3 — Neovim 2b | Phase 2 | later | `reference/kickstart.nvim/` (Task 6), branch `master`; confirm `lazy-lock.json` is tracked there (kickstart-style repos usually track it — if missing, obtain the plugin pin separately) |
+| 3 — Neovim 2b | Phase 2 | later | `reference/.config/nvim/` (Task 6); confirm `lazy-lock.json` is tracked (it may be git-ignored by `.config/nvim/.gitignore` — if so, obtain it separately) |
 | 4 — Secrets via op | Phase 3 | later | Plan 2 done |
 | 5 — devShells + direnv | Phase 4 | later | Plan 1 done |
 | 6 — Cachix | Phase 5 | later | Plans 2-4 done |
@@ -52,8 +44,7 @@ confirm → commit.* "Test fails" means "the capability is absent / build errors
 | `~/dev/nix-config/flake.nix` | Flake inputs (nixpkgs, home-manager) + `homeConfigurations."saher@bazzite"` output |
 | `~/dev/nix-config/flake.lock` | Generated lock — the reproducibility anchor |
 | `~/dev/nix-config/.gitignore` | Already exists (excludes `result`, caches) — extend if needed |
-| `~/dev/nix-config/reference/dotfiles/` | (Task 6) clone of `s4herp/dotfiles` (branch `main`): zsh/tmux/ghostty source for Plan 2. Git-ignored. |
-| `~/dev/nix-config/reference/kickstart.nvim/` | (Task 6) clone of `s4herp/kickstart.nvim` (branch `master`): Neovim source of truth for Plan 3. Git-ignored. |
+| `~/dev/nix-config/reference/` | (Task 6) clone of `github.com/s4herp/dotfiles`, read-only source of truth for Plans 2-3. Git-ignored. |
 
 The repo `~/dev/nix-config` already exists with the spec committed (commit
 `60259d6`). All work happens there.
@@ -307,29 +298,24 @@ machines will resolve. Note it in the commit message of Task 6 for traceability.
 
 ---
 
-## Task 6: Clone both dotfiles repos as the read-only reference
+## Task 6: Clone the dotfiles repo as the read-only reference
 
 **Files:**
 - Create: `~/dev/nix-config/reference/dotfiles/` (git-ignored clone)
-- Create: `~/dev/nix-config/reference/kickstart.nvim/` (git-ignored clone)
 - Modify: `~/dev/nix-config/.gitignore`
 
-This task provides Plans 2-3 the source of truth for the native rewrite. There
-are **two** source repos, both reachable via the authenticated `gh` on Bazzite
-(no macOS-side action):
+This task provides Plans 2-3 the source of truth for the native rewrite of
+zsh/tmux/nvim. Source: `github.com/s4herp/dotfiles` (private, branch `main`,
+**normal layout** — files at repo root mirror `$HOME`; not a bare checkout).
+`gh` is already authenticated as `s4herp`, so this is doable entirely on
+Bazzite with no macOS-side action.
 
-- `s4herp/dotfiles` — PRIVATE, branch `main`, normal layout (files at root
-  mirror `$HOME`; not a bare checkout). Source for **zsh/tmux/ghostty**
-  (Plan 2).
-- `s4herp/kickstart.nvim` — PUBLIC fork, branch `master`. Source of truth for
-  **Neovim** (Plan 3). The `.config/nvim/` inside `dotfiles` is a downstream
-  copy (verified: no `.gitmodules`, plain tree) and is **not** used.
-
-**Scope note:** `dotfiles` contains `.zshrc`, `.zshenv`, `.zprofile`,
-`.zsh_plugins.txt`, `.tmux.conf`, `.config/ghostty/config`. It does **not**
-contain git config (`~/.config/git/config`, the shinkansen/mudango identities,
-the GPG key) — excluded for secrecy. Therefore `git.nix` in Plan 2 is authored
-from the documented values in spec §6.3, not derived from this reference.
+**Scope note:** the repo contains `.zshrc`, `.zshenv`, `.zprofile`,
+`.zsh_plugins.txt`, `.tmux.conf`, `.config/ghostty/config`, and
+`.config/nvim/`. It does **not** contain git config (`~/.config/git/config`,
+the shinkansen/mudango identities, the GPG key) — that was excluded for
+secrecy. Therefore `git.nix` in Plan 2 is authored from the documented values
+in spec §6.3, not derived from this reference.
 
 - [ ] **Step 1: Verify the reference is absent (the "failing test")**
 
@@ -344,49 +330,44 @@ Expected: prints `REFERENCE-ABSENT`.
 Append `/reference/` to `~/dev/nix-config/.gitignore` so the cloned dotfiles
 never get committed into the Nix repo.
 
-- [ ] **Step 3: Clone both source repos (normal clones, not bare)**
+- [ ] **Step 3: Clone the private dotfiles repo (normal clone, not bare)**
 
 Run:
 ```bash
 mkdir -p ~/dev/nix-config/reference
-gh repo clone s4herp/dotfiles       ~/dev/nix-config/reference/dotfiles
-gh repo clone s4herp/kickstart.nvim ~/dev/nix-config/reference/kickstart.nvim
+gh repo clone s4herp/dotfiles ~/dev/nix-config/reference/dotfiles
 ```
-Expected: both clones succeed (authenticated `gh`). `dotfiles` checks out
-branch `main`, `kickstart.nvim` checks out branch `master`.
+Expected: clone succeeds (uses the authenticated `gh`). Files land at
+`~/dev/nix-config/reference/dotfiles/.zshrc` etc.
 
-- [ ] **Step 4: Verify both references are present (the "passing test")**
+- [ ] **Step 4: Verify the reference is present (the "passing test")**
 
 Run:
 ```bash
 d=~/dev/nix-config/reference/dotfiles
-k=~/dev/nix-config/reference/kickstart.nvim
 test -s "$d/.zshrc" && test -s "$d/.tmux.conf" \
-  && test -s "$d/.zsh_plugins.txt" && test -s "$d/.config/ghostty/config" \
-  && test -s "$k/init.lua" \
+  && test -s "$d/.zsh_plugins.txt" && test -d "$d/.config/nvim" \
   && echo "REFERENCE-OK"
 ```
-Expected: prints `REFERENCE-OK`. (Neovim is verified in `kickstart.nvim`, not
-in `dotfiles`.)
+Expected: prints `REFERENCE-OK`.
 
-- [ ] **Step 5: Record whether `lazy-lock.json` is tracked in kickstart.nvim
-(Plan 3 input)**
+- [ ] **Step 5: Record whether `lazy-lock.json` is tracked (Plan 3 input)**
 
 Run:
 ```bash
-ls -l ~/dev/nix-config/reference/kickstart.nvim/lazy-lock.json 2>/dev/null \
-  && echo "LAZYLOCK-PRESENT" || echo "LAZYLOCK-MISSING (Plan 3 must obtain the plugin pin separately)"
+ls -l ~/dev/nix-config/reference/dotfiles/.config/nvim/lazy-lock.json 2>/dev/null \
+  && echo "LAZYLOCK-PRESENT" || echo "LAZYLOCK-MISSING (Plan 3 must obtain it separately)"
 ```
-Expected: one of the two markers (kickstart-style repos usually track
-`lazy-lock.json`). If `LAZYLOCK-MISSING`, Plan 3 records that the Neovim plugin
-pin must be sourced separately.
+Expected: one of the two markers. If `LAZYLOCK-MISSING`, Plan 3 records that
+the Neovim plugin pin must be sourced outside this repo (it is likely ignored
+by `.config/nvim/.gitignore`).
 
 - [ ] **Step 6: Commit the gitignore change**
 
 ```bash
 cd ~/dev/nix-config
 git add .gitignore
-git commit -m "Ignore reference/ (s4herp/dotfiles + kickstart.nvim clones, native-rewrite input)
+git commit -m "Ignore reference/ (s4herp/dotfiles clone, native-rewrite input)
 
 nixpkgs pinned at <REV from Task 5 Step 3>"
 ```
@@ -404,9 +385,8 @@ nixpkgs pinned at <REV from Task 5 Step 3>"
 - Spec §6.1/§12 "flake único enfoque A, flake.lock ancla" → Tasks 3, 5. ✓
 - Spec §9 "rollback vía generaciones" reproducibility primitive → Task 5. ✓
 - Spec §5 "config canónica en macOS, Bazzite greenfield" → Task 6 clones
-  `s4herp/dotfiles` (zsh/tmux/ghostty) and `s4herp/kickstart.nvim` (Neovim
-  source of truth) as the reference Plans 2-3 require; git config gap
-  explicitly handled (built from spec §6.3). ✓
+  `s4herp/dotfiles` (the published terminal dotfiles) as the reference Plans
+  2-3 require; git config gap explicitly handled (built from spec §6.3). ✓
 - Phases 1-6 are explicitly out of scope for this plan (plan series table). ✓
 
 **2. Placeholder scan:** `<HOME>`, `<USER>`, `<STATE_VERSION>`, `<REV>`,
