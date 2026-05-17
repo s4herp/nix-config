@@ -15,11 +15,15 @@
 This is **Plan 1 of 7**, per the approved spec
 (`docs/superpowers/specs/2026-05-17-nix-dotfiles-multiplatform-design.md`):
 
+Dotfiles source: **https://github.com/s4herp/dotfiles** (private, branch
+`main`, normal layout — files at repo root mirror `$HOME`). Reachable from
+Bazzite via the authenticated `gh`/SSH; no macOS-side action required.
+
 | Plan | Spec phase | Status | Blocking input |
 |---|---|---|---|
 | **1 — Bootstrap (this)** | Phase 0 | now | none |
-| 2 — Core shell (Bazzite) | Phase 1 | later | macOS dotfile contents (Task 6 here) |
-| 3 — Neovim 2b | Phase 2 | later | macOS nvim config + lazy-lock.json |
+| 2 — Core shell (Bazzite) | Phase 1 | later | reference cloned (Task 6 here). NOTE: `git.nix` is built from spec §6.3 documented values — the dotfiles repo does **not** contain git config (excluded for secrets). |
+| 3 — Neovim 2b | Phase 2 | later | `reference/.config/nvim/` (Task 6); confirm `lazy-lock.json` is tracked (it may be git-ignored by `.config/nvim/.gitignore` — if so, obtain it separately) |
 | 4 — Secrets via op | Phase 3 | later | Plan 2 done |
 | 5 — devShells + direnv | Phase 4 | later | Plan 1 done |
 | 6 — Cachix | Phase 5 | later | Plans 2-4 done |
@@ -40,7 +44,7 @@ confirm → commit.* "Test fails" means "the capability is absent / build errors
 | `~/dev/nix-config/flake.nix` | Flake inputs (nixpkgs, home-manager) + `homeConfigurations."saher@bazzite"` output |
 | `~/dev/nix-config/flake.lock` | Generated lock — the reproducibility anchor |
 | `~/dev/nix-config/.gitignore` | Already exists (excludes `result`, caches) — extend if needed |
-| `~/dev/nix-config/reference/` | (Task 6) read-only copy of the macOS dotfiles, source of truth for Plans 2-3. Git-ignored. |
+| `~/dev/nix-config/reference/` | (Task 6) clone of `github.com/s4herp/dotfiles`, read-only source of truth for Plans 2-3. Git-ignored. |
 
 The repo `~/dev/nix-config` already exists with the spec committed (commit
 `60259d6`). All work happens there.
@@ -294,15 +298,24 @@ machines will resolve. Note it in the commit message of Task 6 for traceability.
 
 ---
 
-## Task 6: Obtain the macOS dotfiles as the read-only reference
+## Task 6: Clone the dotfiles repo as the read-only reference
 
 **Files:**
-- Create: `~/dev/nix-config/reference/` (git-ignored copy of macOS dotfiles)
+- Create: `~/dev/nix-config/reference/dotfiles/` (git-ignored clone)
 - Modify: `~/dev/nix-config/.gitignore`
 
-This task unblocks Plans 2-3 (native rewrite of zsh/tmux/git/nvim). The dotfile
-**contents** live in the macOS bare-repo `~/.cfg` and are not present on
-Bazzite. Acquiring them requires a cross-machine action.
+This task provides Plans 2-3 the source of truth for the native rewrite of
+zsh/tmux/nvim. Source: `github.com/s4herp/dotfiles` (private, branch `main`,
+**normal layout** — files at repo root mirror `$HOME`; not a bare checkout).
+`gh` is already authenticated as `s4herp`, so this is doable entirely on
+Bazzite with no macOS-side action.
+
+**Scope note:** the repo contains `.zshrc`, `.zshenv`, `.zprofile`,
+`.zsh_plugins.txt`, `.tmux.conf`, `.config/ghostty/config`, and
+`.config/nvim/`. It does **not** contain git config (`~/.config/git/config`,
+the shinkansen/mudango identities, the GPG key) — that was excluded for
+secrecy. Therefore `git.nix` in Plan 2 is authored from the documented values
+in spec §6.3, not derived from this reference.
 
 - [ ] **Step 1: Verify the reference is absent (the "failing test")**
 
@@ -312,54 +325,49 @@ ls ~/dev/nix-config/reference 2>/dev/null || echo "REFERENCE-ABSENT"
 ```
 Expected: prints `REFERENCE-ABSENT`.
 
-- [ ] **Step 2 (performed on the macOS machine): publish the bare-repo**
+- [ ] **Step 2: Ignore the reference directory (it is input, not the config)**
 
-On macOS, push the dotfiles bare-repo to a private remote the Bazzite machine
-can reach (e.g. a private GitHub repo). Exact commands on macOS:
-```bash
-git --git-dir="$HOME/.cfg/" --work-tree="$HOME" remote add origin git@github.com:<your-private>/dotfiles.git
-git --git-dir="$HOME/.cfg/" --work-tree="$HOME" push -u origin HEAD
-```
-Alternative if no remote is desired: from Bazzite, `rsync` the rendered files:
-```bash
-rsync -av --files-from=<list> macos-host:~/ ~/dev/nix-config/reference/
-```
-Expected: the dotfile contents (`.zshrc`, `.tmux.conf`, `~/.config/nvim/`,
-`~/.config/git/config`, etc.) become reachable from Bazzite.
+Append `/reference/` to `~/dev/nix-config/.gitignore` so the cloned dotfiles
+never get committed into the Nix repo.
 
-- [ ] **Step 3: Ignore the reference directory (it is not the config, only input)**
-
-Append to `~/dev/nix-config/.gitignore`:
-```
-/reference/
-```
-
-- [ ] **Step 4: Materialize the reference on Bazzite**
-
-Run (using whichever transport from Step 2 applies), e.g. clone into a worktree:
-```bash
-mkdir -p ~/dev/nix-config/reference
-git clone git@github.com:<your-private>/dotfiles.git ~/dev/nix-config/reference/dotfiles
-```
-
-- [ ] **Step 5: Verify the reference is present (the "passing test")**
+- [ ] **Step 3: Clone the private dotfiles repo (normal clone, not bare)**
 
 Run:
 ```bash
-test -s ~/dev/nix-config/reference/dotfiles/.zshrc \
-  && test -s ~/dev/nix-config/reference/dotfiles/.tmux.conf \
+mkdir -p ~/dev/nix-config/reference
+gh repo clone s4herp/dotfiles ~/dev/nix-config/reference/dotfiles
+```
+Expected: clone succeeds (uses the authenticated `gh`). Files land at
+`~/dev/nix-config/reference/dotfiles/.zshrc` etc.
+
+- [ ] **Step 4: Verify the reference is present (the "passing test")**
+
+Run:
+```bash
+d=~/dev/nix-config/reference/dotfiles
+test -s "$d/.zshrc" && test -s "$d/.tmux.conf" \
+  && test -s "$d/.zsh_plugins.txt" && test -d "$d/.config/nvim" \
   && echo "REFERENCE-OK"
 ```
-Expected: prints `REFERENCE-OK`. (Adjust paths to match the bare-repo layout;
-the requirement is that `.zshrc`, `.tmux.conf`, the nvim config tree, and the
-git config are readable on Bazzite.)
+Expected: prints `REFERENCE-OK`.
+
+- [ ] **Step 5: Record whether `lazy-lock.json` is tracked (Plan 3 input)**
+
+Run:
+```bash
+ls -l ~/dev/nix-config/reference/dotfiles/.config/nvim/lazy-lock.json 2>/dev/null \
+  && echo "LAZYLOCK-PRESENT" || echo "LAZYLOCK-MISSING (Plan 3 must obtain it separately)"
+```
+Expected: one of the two markers. If `LAZYLOCK-MISSING`, Plan 3 records that
+the Neovim plugin pin must be sourced outside this repo (it is likely ignored
+by `.config/nvim/.gitignore`).
 
 - [ ] **Step 6: Commit the gitignore change**
 
 ```bash
 cd ~/dev/nix-config
 git add .gitignore
-git commit -m "Ignore reference/ (macOS dotfiles input for native rewrite)
+git commit -m "Ignore reference/ (s4herp/dotfiles clone, native-rewrite input)
 
 nixpkgs pinned at <REV from Task 5 Step 3>"
 ```
@@ -376,8 +384,9 @@ nixpkgs pinned at <REV from Task 5 Step 3>"
   identical to the `eza` exit check — store-path resolution proven). ✓
 - Spec §6.1/§12 "flake único enfoque A, flake.lock ancla" → Tasks 3, 5. ✓
 - Spec §9 "rollback vía generaciones" reproducibility primitive → Task 5. ✓
-- Spec §5 "config canónica en macOS, Bazzite greenfield" → Task 6 acquires the
-  reference that Plans 2-3 require. ✓
+- Spec §5 "config canónica en macOS, Bazzite greenfield" → Task 6 clones
+  `s4herp/dotfiles` (the published terminal dotfiles) as the reference Plans
+  2-3 require; git config gap explicitly handled (built from spec §6.3). ✓
 - Phases 1-6 are explicitly out of scope for this plan (plan series table). ✓
 
 **2. Placeholder scan:** `<HOME>`, `<USER>`, `<STATE_VERSION>`, `<REV>`,
