@@ -47,6 +47,51 @@ config es server-wide; perdés las sesiones — guardá con `prefix Ctrl-s` ante
 si usás resurrect). nvim: la primera vez lazy.nvim clona los plugins según
 `nvim/lazy-lock.json`.
 
+### Secretos (M3 — `op` / 1Password)
+
+Modelo: los valores viven **solo en 1Password** (vault `Personal`). El repo
+solo guarda **punteros** `op://` en `secrets/secrets.tpl` (sin valores,
+seguro en VCS). `secrets-refresh` los materializa on-demand a
+`~/.cache/ring/secrets` (modo `0600`, fuera del store y de VCS). `op` nunca
+corre al abrir la shell (cero prompts, cero latencia); `zsh.nix` sourcea el
+caché solo si existe.
+
+**Agregar un secreto nuevo (automatizado):**
+
+```
+secret-add NOMBRE              # pide el valor oculto (no entra a argv/ps)
+secret-add NOMBRE --generate   # 1Password genera el valor
+```
+
+`secret-add` hace en un paso: crea el item en op (`Personal`) **y** añade
+`export NOMBRE="op://Personal/NOMBRE/password"` a `secrets/secrets.tpl`.
+Luego (el ciclo Nix es inherente, el script lo imprime):
+
+```
+cd ~/dev/shinkansen/local/nix-config
+git add secrets/secrets.tpl && git commit -m "secrets: add NOMBRE pointer"
+nix run home-manager/master -- switch -b backup --flake .#"saher@macbook"
+secrets-refresh                # regenera el caché; luego shell nueva
+```
+
+**Crear el item a mano en op** (equivalente al paso automatizado):
+
+```
+op item create --category password --title NOMBRE --vault Personal "password=VALOR"
+# luego agregar a secrets/secrets.tpl:
+#   export NOMBRE="op://Personal/NOMBRE/password"
+```
+
+**Rotar / actualizar un valor:** cambiarlo en 1Password, luego
+`secrets-refresh` + shell nueva. El puntero no cambia.
+
+**Convenciones:** `NOMBRE` solo `[A-Za-z0-9_]` (seguro como env var). Vault
+`Personal`, categoría `password`, campo `password`. Nunca poner valores en
+`secrets.tpl` ni en ningún `.nix` (el store es world-readable).
+
+`NIX_CONFIG_DIR` override del path del repo si no es el default
+(`~/dev/shinkansen/local/nix-config`).
+
 ### Rollback
 
 ```
@@ -86,7 +131,8 @@ cp ~/.config/nvim/lazy-lock.json nvim/lazy-lock.json   # ojo: nvim es symlink ro
 - **Precedencia PATH:** `zsh.nix` re-prepende `~/.nix-profile/bin` tras
   `brew shellenv`, así las herramientas Nix ganan a Homebrew. Si una versión
   vieja de Homebrew "gana", revisar ese bloque.
-- **Secretos:** aún en `~/.zsh_secrets` legacy (M3 pendiente: migrar a `op`).
+- **Secretos:** M3 hecho — ver sección "Secretos" arriba. `~/.zsh_secrets`
+  legacy retirado (borrar el archivo huérfano si sigue en disco).
 - **`git`:** identidad global = personal; dentro de `~/dev/shinkansen/` aplica
   la identidad de trabajo vía `includeIf`.
 - **Módulos draft (M3+):** secretos, devShells, Cachix no están aún. Ver
