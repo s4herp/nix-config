@@ -181,6 +181,10 @@
         elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         fi
+        # brew shellenv prepends Homebrew to PATH; re-prepend the Nix profile
+        # so nix-pinned tools (neovim/D4, cli.nix set) win over Homebrew.
+        # `typeset -U path` (HM header) dedupes, keeping the front entry.
+        path=("$HOME/.nix-profile/bin" /nix/var/nix/profiles/default/bin $path)
         if [ -f "$HOME/.atuin/bin/env" ]; then
           . "$HOME/.atuin/bin/env"
           eval "$(atuin init zsh)"
