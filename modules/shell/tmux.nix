@@ -124,13 +124,16 @@ in
       source-file ${catppuccinDir}/catppuccin_tmux.conf
 
       # ---- terminal overrides (~/.tmux.conf lines 2-4) ----
+      # tmux >=3.2 deprecated `Tc`; the RGB terminal-feature is what enables
+      # 24-bit color (catppuccin uses hex). Tc kept for old-tmux compat.
+      set -as terminal-features ",*:RGB"
       set -ga terminal-overrides ",*:Tc"
       set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm'
       set -as terminal-overrides ',*:Setulc=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
 
-      # ---- reload binding (lines 6-8) ----
+      # ---- reload binding (HM config path, not the moved legacy file) ----
       unbind r
-      bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+      bind r source-file ~/.config/tmux/tmux.conf \; display "Config reloaded!"
 
       # ---- misc options not covered by structured settings ----
       set -g allow-passthrough on              # line 12
