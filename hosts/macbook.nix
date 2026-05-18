@@ -3,6 +3,7 @@
 {
   imports = [
     ../modules/shell/zsh.nix
+    ../modules/editor/neovim.nix
   ];
 
   home.username = "saherpinero";
