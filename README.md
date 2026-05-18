@@ -82,8 +82,27 @@ op item create --category password --title NOMBRE --vault Personal "password=VAL
 #   export NOMBRE="op://Personal/NOMBRE/password"
 ```
 
-**Rotar / actualizar un valor:** cambiarlo en 1Password, luego
-`secrets-refresh` + shell nueva. El puntero no cambia.
+**Listar:** `secret-ls` (nombres declarados, sin valores).
+
+**Rotar / actualizar un valor:**
+
+```
+secret-set NOMBRE             # nuevo valor oculto
+secret-set NOMBRE --generate  # 1Password genera uno nuevo
+secrets-refresh               # luego shell nueva
+```
+
+El puntero no cambia → **no hace falta `switch`**, solo `secrets-refresh`.
+(También sirve cambiarlo en la app de 1Password + `secrets-refresh`.)
+
+**Borrar:**
+
+```
+secret-rm NOMBRE              # pide confirmación; borra item op + puntero
+```
+
+Como cambia `secrets.tpl`, sí requiere el ciclo Nix (el script imprime los
+pasos: git commit, switch, borrar caché, secrets-refresh).
 
 **Convenciones:** `NOMBRE` solo `[A-Za-z0-9_]` (seguro como env var). Vault
 `Personal`, categoría `password`, campo `password`. Nunca poner valores en

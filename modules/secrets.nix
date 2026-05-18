@@ -78,11 +78,63 @@ let
     echo "  nix run home-manager/master -- switch -b backup --flake .#\"saher@macbook\""
     echo "  secrets-refresh   # then open a new shell"
   '';
+  # secret-set NAME [--generate]: update an EXISTING item's value. No tpl
+  # change (pointer is unchanged), so no nix switch needed — just refresh.
+  secret-set = pkgs.writeShellScriptBin "secret-set" ''
+    set -eu
+    name="''${1:-}"; mode="''${2:-}"
+    [ -n "$name" ] || { echo "usage: secret-set NAME [--generate]" >&2; exit 2; }
+    op=${pkgs._1password-cli}/bin/op
+    if [ "$mode" = "--generate" ]; then
+      "$op" item edit "$name" --vault Personal --generate-password >/dev/null
+    else
+      printf 'new value for %s (hidden): ' "$name" >&2
+      stty -echo 2>/dev/null || true; IFS= read -r val; stty echo 2>/dev/null || true; echo >&2
+      [ -n "$val" ] || { echo "empty, aborted" >&2; exit 1; }
+      "$op" item edit "$name" --vault Personal "password=$val" >/dev/null
+      unset val
+    fi
+    echo "updated $name in op. next: secrets-refresh ; new shell"
+  '';
+
+  # secret-rm NAME: delete the op item AND drop its pointer from the tpl.
+  secret-rm = pkgs.writeShellScriptBin "secret-rm" ''
+    set -eu
+    name="''${1:-}"
+    [ -n "$name" ] || { echo "usage: secret-rm NAME" >&2; exit 2; }
+    repo="''${NIX_CONFIG_DIR:-$HOME/dev/shinkansen/local/nix-config}"
+    tpl="$repo/secrets/secrets.tpl"
+    op=${pkgs._1password-cli}/bin/op
+    printf 'delete op item "%s" and its tpl pointer? [y/N] ' "$name" >&2
+    read -r ans; [ "$ans" = y ] || [ "$ans" = Y ] || { echo aborted >&2; exit 1; }
+    "$op" item delete "$name" --vault Personal >/dev/null && echo "deleted op item $name"
+    if [ -f "$tpl" ] && grep -qF "op://Personal/$name/password" "$tpl"; then
+      tmp=$(mktemp)
+      grep -vF "op://Personal/$name/password" "$tpl" > "$tmp" && mv "$tmp" "$tpl"
+      echo "removed pointer from $tpl"
+    fi
+    echo
+    echo "next: cd $repo && git add secrets/secrets.tpl && git commit -m \"secrets: drop $name\""
+    echo "  nix run home-manager/master -- switch -b backup --flake .#\"saher@macbook\""
+    echo "  rm -f \"''${XDG_CACHE_HOME:-$HOME/.cache}/ring/secrets\" ; secrets-refresh ; new shell"
+  '';
+
+  # secret-ls: list the pointers currently declared (names only, no values).
+  secret-ls = pkgs.writeShellScriptBin "secret-ls" ''
+    set -eu
+    repo="''${NIX_CONFIG_DIR:-$HOME/dev/shinkansen/local/nix-config}"
+    tpl="$repo/secrets/secrets.tpl"
+    [ -f "$tpl" ] || { echo "no tpl at $tpl" >&2; exit 1; }
+    grep -oE 'op://Personal/[A-Za-z0-9_]+/' "$tpl" | sed 's|op://Personal/||;s|/||' | sort
+  '';
 in
 {
   home.packages = [
     pkgs._1password-cli # `op`, nix-pinned (wins over Homebrew via PATH fix)
     secrets-refresh
     secret-add
+    secret-set
+    secret-rm
+    secret-ls
   ];
 }
