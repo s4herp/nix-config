@@ -18,8 +18,8 @@
 1. Lee §1 (resumen y secuenciación) y §3 (decisiones cerradas) para el marco.
 2. Ejecuta la **Pista macOS** (§5) paso a paso en el Mac.
 3. Cuando quieras llevarlo a Bazzite, ve a la **Pista Bazzite** (§6): está
-   **bloqueada** por un problema verificado de composefs; ahí está la
-   evidencia y los caminos a investigar (no un fix inventado).
+   **bloqueada** por composefs; causa raíz verificada contra source +
+   workarounds con fuente (A transient root / C imagen custom) en §6.2.
 4. §7 (secretos), §8 (verificación), §9 (riesgos) aplican a ambas.
 5. Apéndice A: salidas de diagnóstico exactas capturadas el 2026-05-17.
 
@@ -328,42 +328,43 @@ receipt a `/nix` pega contra solo-lectura. El revert dejó el sistema **limpio**
   conocido** hoy, mientras se resuelve esto sin presión.
 `─────────────────────────────────────────────────`
 
-### 6.2 Caminos a investigar (NO un fix verificado)
+### 6.2 Causa raíz verificada y workarounds (con fuente)
 
-**Verificación realizada (2026-05-17, vía context7 sobre la doc oficial de
-Determinate Systems):** la documentación oficial **NO cubre** el caso de root
-composefs/inmutable. Solo trae el comando genérico de instalación y
-troubleshooting específico de macOS; menciona compatibilidad con "la mayoría
-de Linux (incluido SELinux)" pero **nada** sobre composefs ni el fallo de
-`nix.mount` en root sellado. → No hay fix documentado por el proveedor;
-**no se afirma una solución de memoria**. La fuente autoritativa pasa a ser el
-`--help` del propio instalador y los issues del repo, no el sitio de docs.
+**Causa raíz (verificada contra el source del instalador,
+`DeterminateSystems/nix-installer` `src/planner/ostree.rs` @ `c4d04db`):** el
+planner `ostree` crea el mountpoint `/nix` con un unit `nix-directory.service`
+cuyo `[Service]` hace `ExecStartPre=chattr -i /` → `ExecStart=mkdir -p /nix`
+→ `ExecStopPost=chattr +i /`. Eso asume ostree **clásico** (`/` escribible con
+*atributo* inmutable). Bazzite 44 usa el cambio
+[ComposefsAtomicDesktops de Fedora 42+](https://fedoraproject.org/wiki/Changes/ComposefsAtomicDesktops):
+`/` está **montado read-only** (no es un atributo). `chattr -i /` no puede
+volver escribible un montaje `ro` → `mkdir /nix` falla con *Read-only file
+system* (code 30) → `nix-directory.service` falla → `nix.mount`
+(`Requires=nix-directory.service`) falla. **No es bug de Determinate**: rompe a
+todo instalador que escriba en `/` (Nix upstream, Lix, etc.). El único flag del
+planner es `--persistence` (default `/var/home/nix`) y **no** toca este
+problema (es el *backing store*, no el mountpoint).
 
-Opciones a evaluar **con fuentes** antes de tocar el sistema:
+**Estado upstream (verificado, issues del repo):** issue canónico **abierto**
+`nix-installer#1445` "Ostree installation breaks with composefs changes in
+Fedora 42" (25+ comentarios; relacionados #1596 Bazzite, #1682, #617).
+**Universal Blue rechazó explícitamente** incluir un `/nix` vacío en la imagen
+(`ublue-os/main#765`) → **no habrá fix de imagen para Bazzite**; la solución es
+del lado del usuario.
 
-1. **Opciones del planner `ostree` del instalador**: el fallo reportó
-   `Planner: ostree (with default settings)`. La fuente verificable y local es
-   el propio binario:
-   ```bash
-   curl -fsSL https://install.determinate.systems/nix > /tmp/nix-installer
-   chmod +x /tmp/nix-installer
-   /tmp/nix-installer install --help
-   /tmp/nix-installer install ostree --help   # flags del planner ostree
-   ```
-   Buscar flags de persistencia/mountpoint relevantes a composefs. Cruzar con
-   los issues de `DeterminateSystems/nix-installer` filtrando
-   `composefs`/`bazzite`/`ublue` (la doc oficial ya se descartó como fuente).
-2. **Guía uBlue/Bazzite oficial para Nix**: uBlue documenta métodos para
-   software fuera de la imagen. Verificar si recomiendan un método concreto
-   (montaje `/var/lib/nix` + bind, o `/nix` vía `systemd` con `RequiresMountsFor`).
-3. **Backing store en `/var` + `nix.mount` propio**: `/var` SÍ es escribible en
-   ostree/composefs. El patrón es montar un dir bajo `/var` en `/nix`; el
-   problema es crear el *mountpoint* `/nix` en el root sellado. Investigar si
-   `systemd` puede materializar el target con `ConditionPathExists`/tmpfiles
-   en composefs (es justo lo que falló — entender por qué).
-4. **Alternativas si `/nix` resulta inviable**: Distrobox/toolbox con Nix
-   dentro (aislado, pierde integración con el host), o `nix` con store
-   relocalizado (`--store`), evaluando el coste de no usar `/nix` canónico.
+**Workarounds verificados (de #1445), menor → mayor esfuerzo:**
+
+| Opción | Acción | Trade-off | Fuente |
+|---|---|---|---|
+| **A. Transient root** *(desbloqueo rápido)* | crear `/etc/ostree/prepare-root.conf` con `[composefs] enabled=yes` / `[sysroot] readonly=true` / `[root] transient=true`, regenerar initramfs (`rpm-ostree initramfs --enable --arg=-i --arg=/etc/ostree/prepare-root.conf --arg=/usr/lib/ostree/prepare-root.conf`), **reboot**. Mantiene composefs | `/` pasa a overlay escribible que se resetea en cada boot; leve menos inmutabilidad. Opción soportada por ostree/bootc | `coreos/rpm-ostree#337` (comentario en #1445) |
+| **B. Desactivar composefs** | kernel arg según docs Fedora CoreOS | pierde integridad composefs; algunos reportan `chattr: Read-only` al intentar | docs.fedoraproject CoreOS composefs |
+| **C. Imagen derivada custom** *(durable, uBlue-native)* | imagen uBlue propia con `/nix` vacío baked + omitir `nix-directory.service`; rebase a ella | más trabajo inicial; **lo más reproducible**, alineado con tu flujo atómico (ya layereas/rebaseas); requiere manejar upgrades de Nix | `junglerobba` commit citado en #1445; `ublue-os/image-template` |
+
+**Recomendación para este equipo:** **A** para desbloquear ya; **C** como
+estado final durable (encaja con que ya gestionas imagen atómica). Ambas son
+cambios de arranque del sistema → el usuario decide y ejecuta; este informe no
+las aplica. Futuro a vigilar: opción `root = transient-ro` en bootc tracker
+(`gitlab.com/fedora/bootc/tracker#26`).
 
 Criterio de salida Bazzite: `nix --version` responde, `flakes` activos,
 `home-manager switch --flake .#"saher@bazzite"` aplica, y `hello` resuelve a
@@ -424,7 +425,7 @@ $TMPDIR/ring/secrets | ~/.cache/ring/secrets   (macOS: no hay XDG_RUNTIME_DIR)
 
 | Tema | Estado / mitigación |
 |---|---|
-| Bazzite composefs | **ABIERTO** — investigar §6.2 con fuentes antes de tocar el sistema |
+| Bazzite composefs | **CAUSA RAÍZ VERIFICADA** (§6.2): `chattr -i /` incompatible con root composefs ro de Fedora 42+. Sin fix de imagen (uBlue lo rechazó). Workarounds con fuente: A (transient root, rápido) / C (imagen custom, durable). El usuario elige y ejecuta |
 | Iterar sobre la máquina de trabajo | macOS-first: salvaguardas §5.0 obligatorias; `~/.cfg` intacto como retorno |
 | `git.nix` sin fuente en repo | Escrito a mano desde spec §6.3 (firma GPG, includes) |
 | `lazy-lock.json` git-ignored | Verificar; si falta, obtener pin de plugins aparte |
@@ -469,8 +470,13 @@ systemctl start nix.mount → "A dependency job for nix.mount failed"
   `~/Downloads/2026-05-17-herramientas-de-desarrollo.md`
 - Dotfiles: `github.com/s4herp/dotfiles` (privado, rama `main`)
 - Doc oficial Determinate Systems (`/websites/determinate_systems`, vía
-  context7) — **verificada 2026-05-17: NO documenta composefs/inmutable**;
-  descartada como fuente para el bloqueo de Bazzite.
-- Fuentes pendientes (autoritativas): `nix-installer install [ostree] --help`
-  (binario local); issues `DeterminateSystems/nix-installer` filtrando
-  composefs/ublue/bazzite; guía Nix de uBlue.
+  context7) — verificada 2026-05-17: no documenta composefs; descartada.
+- **Source autoritativo del bloqueo** (verificado): `nix-installer`
+  `src/planner/ostree.rs` @ `c4d04db` (unit `nix-directory.service` con
+  `chattr -i /` + `mkdir /nix`).
+- **Estado upstream** (verificado): `DeterminateSystems/nix-installer#1445`
+  (abierto), #1596, #1682, #617; `ublue-os/main#765` (uBlue rechaza `/nix`).
+- Workarounds: `coreos/rpm-ostree#337` (transient root via
+  `prepare-root.conf`); `ublue-os/image-template` (imagen custom);
+  `gitlab.com/fedora/bootc/tracker#26` (futuro `root=transient-ro`);
+  `fedoraproject.org/wiki/Changes/ComposefsAtomicDesktops` (el cambio causa).
