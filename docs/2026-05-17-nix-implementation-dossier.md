@@ -330,14 +330,29 @@ receipt a `/nix` pega contra solo-lectura. El revert dejó el sistema **limpio**
 
 ### 6.2 Caminos a investigar (NO un fix verificado)
 
-El servidor de documentación (context7) se desconectó durante esta sesión, así
-que **no afirmo una solución de memoria** (criterio del usuario: verificar
-contra fuente). Opciones a evaluar **con fuentes** antes de tocar el sistema:
+**Verificación realizada (2026-05-17, vía context7 sobre la doc oficial de
+Determinate Systems):** la documentación oficial **NO cubre** el caso de root
+composefs/inmutable. Solo trae el comando genérico de instalación y
+troubleshooting específico de macOS; menciona compatibilidad con "la mayoría
+de Linux (incluido SELinux)" pero **nada** sobre composefs ni el fallo de
+`nix.mount` en root sellado. → No hay fix documentado por el proveedor;
+**no se afirma una solución de memoria**. La fuente autoritativa pasa a ser el
+`--help` del propio instalador y los issues del repo, no el sitio de docs.
 
-1. **Determinate Nix en sistemas composefs/uBlue**: revisar la doc oficial
-   actual de Determinate Systems y los issues de `DeterminateSystems/nix-installer`
-   filtrando `composefs`/`bazzite`/`ublue`/`ostree`. Confirmar si hay un
-   planner/flag soportado para root composefs.
+Opciones a evaluar **con fuentes** antes de tocar el sistema:
+
+1. **Opciones del planner `ostree` del instalador**: el fallo reportó
+   `Planner: ostree (with default settings)`. La fuente verificable y local es
+   el propio binario:
+   ```bash
+   curl -fsSL https://install.determinate.systems/nix > /tmp/nix-installer
+   chmod +x /tmp/nix-installer
+   /tmp/nix-installer install --help
+   /tmp/nix-installer install ostree --help   # flags del planner ostree
+   ```
+   Buscar flags de persistencia/mountpoint relevantes a composefs. Cruzar con
+   los issues de `DeterminateSystems/nix-installer` filtrando
+   `composefs`/`bazzite`/`ublue` (la doc oficial ya se descartó como fuente).
 2. **Guía uBlue/Bazzite oficial para Nix**: uBlue documenta métodos para
    software fuera de la imagen. Verificar si recomiendan un método concreto
    (montaje `/var/lib/nix` + bind, o `/nix` vía `systemd` con `RequiresMountsFor`).
@@ -453,5 +468,9 @@ systemctl start nix.mount → "A dependency job for nix.mount failed"
 - Informe de herramientas (comportamiento objetivo):
   `~/Downloads/2026-05-17-herramientas-de-desarrollo.md`
 - Dotfiles: `github.com/s4herp/dotfiles` (privado, rama `main`)
-- A verificar con fuente: doc oficial Determinate Systems + issues
-  `DeterminateSystems/nix-installer` (composefs/ublue/bazzite); guía Nix de uBlue.
+- Doc oficial Determinate Systems (`/websites/determinate_systems`, vía
+  context7) — **verificada 2026-05-17: NO documenta composefs/inmutable**;
+  descartada como fuente para el bloqueo de Bazzite.
+- Fuentes pendientes (autoritativas): `nix-installer install [ostree] --help`
+  (binario local); issues `DeterminateSystems/nix-installer` filtrando
+  composefs/ublue/bazzite; guía Nix de uBlue.
