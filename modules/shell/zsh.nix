@@ -12,6 +12,12 @@
 # (not replaced here; see dossier M4).
 
 {
+  # Vendored Powerlevel10k config (1641 lines, p10k configure wizard output).
+  # Not in the dotfiles repo nor ~/.cfg; vendored here to close the
+  # reproducibility hole (Bazzite would otherwise have no prompt config).
+  # zsh.nix's initContent already sources ~/.p10k.zsh if present.
+  home.file.".p10k.zsh".source = ../../p10k.zsh;
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
