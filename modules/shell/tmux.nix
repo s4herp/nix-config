@@ -117,9 +117,8 @@ in
       # Set options BEFORE sourcing so the theme/status confs pick them up.
       set -g @catppuccin_flavor "mocha"
       set -g @catppuccin_status_background "none"
-      set -g @catppuccin_window_status_style "none"
-      set -g @catppuccin_pane_status_enabled "off"
-      set -g @catppuccin_pane_border_status "off"
+      set -g @catppuccin_window_status_style "rounded"
+      set -g @catppuccin_date_time_text "%Y-%m-%d %H:%M"
       source-file ${catppuccinDir}/catppuccin_options_tmux.conf
       source-file ${catppuccinDir}/catppuccin_tmux.conf
 
@@ -145,56 +144,30 @@ in
       bind-key k select-pane -U
       bind-key l select-pane -R
 
-      # ---- status bar base (lines 24-27) ----
-      set -g status-position top
-      set -g status-style "bg=#{@thm_bg}"
-      set -g status-justify "absolute-centre"
-
       # ---- copy-mode-vi selection bindings (lines 40-42) ----
       bind-key -T copy-mode-vi C-v send-keys -X begin-selection \; send-keys -X rectangle-toggle;
       bind-key -T copy-mode-vi v send-keys -X begin-selection;
       bind-key -T copy-mode-vi V send-keys -X select-line;
 
-      # ---- status left (lines 66-74) ----
+      # ---- status line via catppuccin v2 native modules ----
+      # The legacy hand-rolled status-left/right used the v1 #{#[...]} idiom
+      # which tmux 3.6a does not expand (segments rendered blank), and the
+      # battery/online vars were never populated. Replaced with catppuccin v2
+      # composable modules: set AFTER the plugin is loaded (sourced above).
+      # `-agF` on battery so the module's #{battery_*} formats expand
+      # (tmux-battery plugin loaded earlier in the plugins list).
+      set -g status-position top
+      set -g status-justify "left"
       set -g status-left-length 100
-      set -g status-left ""
-      set -ga status-left "#{?client_prefix,#{#[bg=#{@thm_red},fg=#{@thm_bg},bold]  #S },#{#[bg=#{@thm_bg},fg=#{@thm_green}]  #S }}"
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]│"
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_maroon}]  #{pane_current_command} "
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]│"
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_blue}]  #{=/-32/...:#{s|$USER|~|:#{b:pane_current_path}}} "
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]#{?window_zoomed_flag,│,}"
-      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_yellow}]#{?window_zoomed_flag,  zoom ,}"
-
-      # ---- status right (lines 77-83) ----
       set -g status-right-length 100
-      set -g status-right ""
-      set -ga status-right "#{?#{e|>=:10,#{battery_percentage}},#{#[bg=#{@thm_red},fg=#{@thm_bg}]},#{#[bg=#{@thm_bg},fg=#{@thm_pink}]}} #{battery_icon} #{battery_percentage} "
-      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}, none]│"
-      set -ga status-right "#[bg=#{@thm_bg}]#{?#{==:#{online_status},ok},#[fg=#{@thm_mauve}] 󰖩 on ,#[fg=#{@thm_red},bold]#[reverse] 󰖪 off }"
-      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}, none]│"
-      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_blue}] 󰭦 %Y-%m-%d 󰅐 %H:%M "
+      set -g status-left "#{E:@catppuccin_status_session}"
+      set -g status-right "#{E:@catppuccin_status_directory}"
+      set -agF status-right "#{E:@catppuccin_status_battery}"
+      set -ag status-right "#{E:@catppuccin_status_date_time}"
 
-      # ---- pane border look and feel (lines 90-94) ----
-      setw -g pane-border-status top
-      setw -g pane-border-format ""
-      setw -g pane-active-border-style "bg=#{@thm_bg},fg=#{@thm_overlay_0}"
-      setw -g pane-border-style "bg=#{@thm_bg},fg=#{@thm_surface_0}"
-      setw -g pane-border-lines single
-
-      # ---- window look and feel (lines 97-108) ----
+      # window list + pane borders are owned by catppuccin v2
+      # (@catppuccin_window_status_style "rounded" set before the source).
       set -wg automatic-rename on
-      set -g automatic-rename-format "Window"
-
-      set -g window-status-format " #I#{?#{!=:#{window_name},Window},: #W,} "
-      set -g window-status-style "bg=#{@thm_bg},fg=#{@thm_rosewater}"
-      set -g window-status-last-style "bg=#{@thm_bg},fg=#{@thm_peach}"
-      set -g window-status-activity-style "bg=#{@thm_red},fg=#{@thm_bg}"
-      set -g window-status-bell-style "bg=#{@thm_red},fg=#{@thm_bg},bold"
-      set -gF window-status-separator "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}]│"
-
-      set -g window-status-current-format " #I#{?#{!=:#{window_name},Window},: #W,} "
-      set -g window-status-current-style "bg=#{@thm_peach},fg=#{@thm_bg},bold"
     '';
   };
 }
