@@ -1,5 +1,11 @@
 # Nix Bootstrap (Phase 0) Implementation Plan
 
+> **⚠ HISTÓRICO / DIFERIDO — NO EJECUTAR EN BAZZITE.** Este es el plan Fase 0
+> *Bazzite-first*. La secuencia vigente es **macOS-first**:
+> `docs/2026-05-17-nix-implementation-dossier.md` (ver `CLAUDE.md` en la raíz).
+> Bazzite está **bloqueado por composefs** (dossier §6.2): ejecutar la Tarea 1
+> de este plan en Bazzite **fallará**. Sirve solo como referencia de pasos.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Install Nix on Bazzite and stand up a minimal, working flake-based Home Manager configuration that manages one trivial package, plus obtain the macOS dotfiles as the source-of-truth reference for later native-rewrite phases.

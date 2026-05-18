@@ -1,5 +1,11 @@
 # Spec — Migración de dotfiles a Nix/Home Manager multiplataforma
 
+> **⚠ ESTADO:** Las **decisiones de diseño (§3, §12) siguen VIGENTES**. Pero la
+> **secuencia descrita aquí (Bazzite-first) está SUPERADA**: el plan de
+> ejecución vigente es macOS-first y vive en
+> `docs/2026-05-17-nix-implementation-dossier.md`. Ver `CLAUDE.md` (raíz) antes
+> de actuar. Este spec se conserva por sus decisiones y su razonamiento.
+
 - **Fecha:** 2026-05-17
 - **Autor:** Saher Pinero
 - **Estado:** Aprobado (diseño) — pendiente de plan de implementación
