@@ -41,6 +41,14 @@ let
   # the main conf (which itself sources themes/catppuccin_<flavor>_tmux.conf).
   catppuccinDir =
     "${pkgs.tmuxPlugins.catppuccin}/share/tmux-plugins/catppuccin";
+  # battery / online-status replace #{battery_*}/#{online_status} placeholders
+  # in status-right ONCE when their .tmux runs. HM runs plugin run-shell
+  # BEFORE extraConfig, so they must instead be sourced AFTER status-right is
+  # set (end of extraConfig), not listed as plugins.
+  batteryTmux =
+    "${pkgs.tmuxPlugins.battery}/share/tmux-plugins/battery/battery.tmux";
+  onlineTmux =
+    "${pkgs.tmuxPlugins.online-status}/share/tmux-plugins/online-status/online_status.tmux";
 in
 {
   programs.tmux = {
@@ -88,18 +96,10 @@ in
       # set -g @plugin 'tmux-plugins/tmux-resurrect' (line 53)
       resurrect
 
-      # tmux-online-status (line 50) + icons (lines 62-63)
-      {
-        plugin = online-status;
-        extraConfig = ''
-          set -g @online_icon "ok"
-          set -g @offline_icon "nok"
-        '';
-      }
-
-      # tmux-battery (line 51). No explicit options in source; consumed by
-      # the status-right format string in extraConfig below.
-      battery
+      # tmux-online-status + tmux-battery are NOT plugin entries: they
+      # string-replace placeholders in status-right and HM would run them
+      # before status-right is set. Sourced at the end of extraConfig instead
+      # (see batteryTmux/onlineTmux).
 
       # catppuccin/tmux v2 (nixpkgs 2.1.3) is NOT added as a plugin entry:
       # its run-shell wrapper (catppuccin.tmux) fails under tmux 3.6a
@@ -115,10 +115,11 @@ in
     extraConfig = ''
       # ---- catppuccin v2 (sourced directly; run-shell wrapper broken) ----
       # Set options BEFORE sourcing so the theme/status confs pick them up.
+      # Only the @thm_* palette is needed; status line is hand-rolled below
+      # (the legacy look). status_background none keeps catppuccin from
+      # overriding our own status-style.
       set -g @catppuccin_flavor "mocha"
       set -g @catppuccin_status_background "none"
-      set -g @catppuccin_window_status_style "rounded"
-      set -g @catppuccin_date_time_text "%Y-%m-%d %H:%M"
       source-file ${catppuccinDir}/catppuccin_options_tmux.conf
       source-file ${catppuccinDir}/catppuccin_tmux.conf
 
@@ -149,25 +150,61 @@ in
       bind-key -T copy-mode-vi v send-keys -X begin-selection;
       bind-key -T copy-mode-vi V send-keys -X select-line;
 
-      # ---- status line via catppuccin v2 native modules ----
-      # The legacy hand-rolled status-left/right used the v1 #{#[...]} idiom
-      # which tmux 3.6a does not expand (segments rendered blank), and the
-      # battery/online vars were never populated. Replaced with catppuccin v2
-      # composable modules: set AFTER the plugin is loaded (sourced above).
-      # `-agF` on battery so the module's #{battery_*} formats expand
-      # (tmux-battery plugin loaded earlier in the plugins list).
+      # ---- status bar base (legacy look, de-nested for tmux 3.6a) ----
+      # tmux 3.6a does not expand the v1 `#{#[...]}` wrapper; the legacy
+      # strings are reproduced verbatim with `#{#[STYLE]TEXT}` -> `#[STYLE]TEXT`.
       set -g status-position top
-      set -g status-justify "left"
-      set -g status-left-length 100
-      set -g status-right-length 100
-      set -g status-left "#{E:@catppuccin_status_session}"
-      set -g status-right "#{E:@catppuccin_status_directory}"
-      set -agF status-right "#{E:@catppuccin_status_battery}"
-      set -ag status-right "#{E:@catppuccin_status_date_time}"
+      set -g status-style "bg=#{@thm_bg}"
+      set -g status-justify "absolute-centre"
 
-      # window list + pane borders are owned by catppuccin v2
-      # (@catppuccin_window_status_style "rounded" set before the source).
+      # ---- status left (legacy lines 66-74, de-nested) ----
+      set -g status-left-length 100
+      set -g status-left ""
+      # Commas inside #[...] are the ternary separator at depth 0 in tmux's
+      # #{?,,} parser, so styles inside a conditional must be split into
+      # comma-free #[..] chains (#[a,b,c] -> #[a]#[b]#[c]).
+      set -ga status-left "#{?client_prefix,#[bg=#{@thm_red}]#[fg=#{@thm_bg}]#[bold]  #S ,#[bg=#{@thm_bg}]#[fg=#{@thm_green}]  #S }"
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]│"
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_maroon}]  #{pane_current_command} "
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]│"
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_blue}]  #{=/-32/...:#{s|$USER|~|:#{b:pane_current_path}}} "
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_overlay_0},none]#{?window_zoomed_flag,│,}"
+      set -ga status-left "#[bg=#{@thm_bg},fg=#{@thm_yellow}]#{?window_zoomed_flag,  zoom ,}"
+
+      # ---- status right (legacy lines 77-83, de-nested) ----
+      set -g status-right-length 100
+      set -g status-right ""
+      set -ga status-right "#{?#{e|>=:10,#{battery_percentage}},#[bg=#{@thm_red}]#[fg=#{@thm_bg}],#[bg=#{@thm_bg}]#[fg=#{@thm_pink}]} #{battery_icon} #{battery_percentage} "
+      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}, none]│"
+      set -ga status-right "#[bg=#{@thm_bg}]#{?#{==:#{online_status},ok},#[fg=#{@thm_mauve}] 󰖩 on ,#[fg=#{@thm_red}]#[bold]#[reverse] 󰖪 off }"
+      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}, none]│"
+      set -ga status-right "#[bg=#{@thm_bg},fg=#{@thm_blue}] 󰭦 %Y-%m-%d 󰅐 %H:%M "
+
+      # ---- pane border look and feel (legacy lines 90-94) ----
+      setw -g pane-border-status top
+      setw -g pane-border-format ""
+      setw -g pane-active-border-style "bg=#{@thm_bg},fg=#{@thm_overlay_0}"
+      setw -g pane-border-style "bg=#{@thm_bg},fg=#{@thm_surface_0}"
+      setw -g pane-border-lines single
+
+      # ---- window look and feel (legacy lines 97-108) ----
       set -wg automatic-rename on
+      set -g automatic-rename-format "Window"
+      set -g window-status-format " #I#{?#{!=:#{window_name},Window},: #W,} "
+      set -g window-status-style "bg=#{@thm_bg},fg=#{@thm_rosewater}"
+      set -g window-status-last-style "bg=#{@thm_bg},fg=#{@thm_peach}"
+      set -g window-status-activity-style "bg=#{@thm_red},fg=#{@thm_bg}"
+      set -g window-status-bell-style "bg=#{@thm_red},fg=#{@thm_bg},bold"
+      set -gF window-status-separator "#[bg=#{@thm_bg},fg=#{@thm_overlay_0}]│"
+      set -g window-status-current-format " #I#{?#{!=:#{window_name},Window},: #W,} "
+      set -g window-status-current-style "bg=#{@thm_peach},fg=#{@thm_bg},bold"
+
+      # ---- battery + online-status: source AFTER status-right is set so
+      # their one-shot placeholder substitution applies (legacy icons) ----
+      set -g @online_icon "ok"
+      set -g @offline_icon "nok"
+      run-shell ${onlineTmux}
+      run-shell ${batteryTmux}
     '';
   };
 }
