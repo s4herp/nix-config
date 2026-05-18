@@ -7,6 +7,7 @@
     ../modules/editor/neovim.nix
     ../modules/direnv.nix
     ../modules/cli.nix
+    ../modules/git.nix
   ];
 
   home.username = "saherpinero";
