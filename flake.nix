@@ -22,6 +22,14 @@
           };
           modules = [ hostModule ];
         };
+      systems = [ "aarch64-darwin" "x86_64-linux" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system:
+        f (import nixpkgs {
+          inherit system;
+          config.allowUnfreePredicate = pkg:
+            builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
+        }));
+      beamSets = pkgs: import ./devshells/beam.nix { inherit pkgs; };
     in {
       homeConfigurations."saher@macbook" = mkHome {
         system = "aarch64-darwin";
@@ -32,5 +40,10 @@
         system = "x86_64-linux";
         hostModule = ./hosts/bazzite.nix;
       };
+
+      packages = forAllSystems (pkgs:
+        nixpkgs.lib.mapAttrs' (name: drv:
+          nixpkgs.lib.nameValuePair "beam-${name}" drv
+        ) (beamSets pkgs));
     };
 }
