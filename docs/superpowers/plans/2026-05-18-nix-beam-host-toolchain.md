@@ -10,6 +10,17 @@
 
 ---
 
+> **EXECUTION STATUS (paused 2026-05-18):** Task 1 done (commit `b5a413a`).
+> Tasks 2–7 pending. **BLOCKER:** pinned nixpkgs (nixos-unstable) removed
+> `erlang_26` + `elixir_1_16` (EOL); the legacy set `e1_16_o26` (1.16/26 —
+> majority of monorail sub-repos) was substituted with 1.17/OTP27 under the
+> same name (misnomer to fix); `nodejs_23`→`nodejs_24`. Decision pending:
+> recommended = add a 2nd pinned nixpkgs input (e.g. nixos-24.05) that still
+> has erlang_26/elixir_1_16, source the legacy set from it, update spec D4.
+> Resume: pick the fix, correct Task 1, continue subagent-driven from Task 2.
+
+---
+
 ## File Structure
 
 - Create `devshells/beam.nix` — declarative attrset of BEAM sets → `symlinkJoin` derivations. Single source of versions.
