@@ -47,10 +47,10 @@
     jq # JSON processor
     httpie # human-friendly HTTP client
     graphviz # graph rendering (tools report §3)
-    direnv # per-directory env loading (also see modules/direnv.nix)
+    # direnv owned by modules/direnv.nix (programs.direnv) — NOT here
+    # neovim owned by modules/editor/neovim.nix (programs.neovim) — NOT here
 
     # --- Editors / CLI ---
-    neovim # primary editor (pinned natively here; see dossier D4/M2)
     vim # legacy fallback editor (tools report §3)
 
     # NOTE: the following tools-report §3 entries are intentionally NOT added
