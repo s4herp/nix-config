@@ -11,30 +11,20 @@
 
   outputs = { self, nixpkgs, home-manager, ... }:
     let
-      mkHome = { system, username, homeDirectory }:
+      mkHome = { system, hostModule }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
-          modules = [
-            ({ pkgs, ... }: {
-              home.username = username;
-              home.homeDirectory = homeDirectory;
-              home.stateVersion = "26.05";
-              programs.home-manager.enable = true;
-              home.packages = [ pkgs.hello ];   # smoke test
-            })
-          ];
+          modules = [ hostModule ];
         };
     in {
       homeConfigurations."saher@macbook" = mkHome {
         system = "aarch64-darwin";
-        username = "saherpinero";
-        homeDirectory = "/Users/saherpinero";
+        hostModule = ./hosts/macbook.nix;
       };
       # Pre-cableado para el futuro (no se activa en macOS):
       homeConfigurations."saher@bazzite" = mkHome {
         system = "x86_64-linux";
-        username = "saherpinero";
-        homeDirectory = "/var/home/saherpinero";  # verificar en Bazzite
+        hostModule = ./hosts/bazzite.nix;
       };
     };
 }
