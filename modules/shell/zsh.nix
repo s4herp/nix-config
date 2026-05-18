@@ -313,8 +313,8 @@
         # declared in HM, never in the nix store, never in VCS.
         [ -r "''${TMPDIR:-/tmp}/ring/secrets" ] && source "''${TMPDIR:-/tmp}/ring/secrets"
         [ -r "$HOME/.cache/ring/secrets" ] && source "$HOME/.cache/ring/secrets"
-        # legacy secret files, kept until M3 lands (parity with old .zshrc)
-        [ -f ~/.zsh_secrets ] && source ~/.zsh_secrets
+        # ~/.zsh_secrets retired: secrets now come from the op-injected cache
+        # above (M3). ~/.zshrc.local kept as a local non-secret override.
         [ -f ~/.zshrc.local ] && source ~/.zshrc.local
       '')
     ];
