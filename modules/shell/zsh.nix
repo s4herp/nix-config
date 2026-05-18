@@ -190,9 +190,8 @@
           eval "$(atuin init zsh)"
         fi
         [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-        if command -v direnv &> /dev/null; then
-          eval "$(direnv hook zsh)"
-        fi
+        # direnv hook is owned by modules/direnv.nix (programs.direnv injects
+        # `direnv hook zsh` into HM's zsh integration). Do NOT re-add it here.
         if command -v zoxide &> /dev/null; then
           eval "$(zoxide init zsh)"
         fi

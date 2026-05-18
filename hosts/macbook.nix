@@ -4,6 +4,7 @@
   imports = [
     ../modules/shell/zsh.nix
     ../modules/editor/neovim.nix
+    ../modules/direnv.nix
   ];
 
   home.username = "saherpinero";
