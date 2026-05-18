@@ -25,16 +25,22 @@
 let
   tmux-easymotion = pkgs.tmuxPlugins.mkTmuxPlugin {
     pluginName = "tmux-easymotion";
-    version = "unstable-2023-09-25";
+    version = "0-unstable-2026-05-18";
     rtpFilePath = "tmux-easymotion.tmux";
     src = pkgs.fetchFromGitHub {
       owner = "ddzero2c";
       repo = "tmux-easymotion";
-      # Pinned commit; bump deliberately. Hash must be updated alongside rev.
-      rev = "1a5210e3fef82c92739a8ad6b9e51adcd4e21f3a";
-      hash = "sha256-Sa0/jK7r2zMz3Q6ZQ9pq2W6q9oeJ8d2tH8m6mYQ7lY=";
+      # Pinned commit; bump deliberately. Hash must be updated alongside rev
+      # (nix store prefetch-file --unpack on the archive).
+      rev = "c295db09a92e3f6db1e10879b8bc4d351d8917eb";
+      hash = "sha256-3Yn8/W13Zr7HzUdRlsjBS+/WtoG0JsyTEWKePhny9bI=";
     };
   };
+  # catppuccin v2 conf dir (sourced directly; its run-shell wrapper is broken
+  # under tmux 3.6a). Mirrors what catppuccin.tmux does: source options then
+  # the main conf (which itself sources themes/catppuccin_<flavor>_tmux.conf).
+  catppuccinDir =
+    "${pkgs.tmuxPlugins.catppuccin}/share/tmux-plugins/catppuccin";
 in
 {
   programs.tmux = {
@@ -95,29 +101,28 @@ in
       # the status-right format string in extraConfig below.
       battery
 
-      # catppuccin/tmux (line 52) + flavor/options (lines 55-59).
-      # NOTE: nixpkgs ships catppuccin v2 (2.1.3). The source ~/.tmux.conf
-      # was written against the v1 @thm_*/@catppuccin_* API. The flavor and
-      # legacy @catppuccin_* options are preserved verbatim for fidelity, but
-      # see "gaps/risks" -- v2 may ignore some and the @thm_* refs below may
-      # need migration. Loaded LAST so its @thm_* vars exist for the
-      # status/pane/window styling in the top-level extraConfig.
-      {
-        plugin = catppuccin;
-        extraConfig = ''
-          set -g @catppuccin_flavor "mocha"
-          set -g @catppuccin_status_background "none"
-          set -g @catppuccin_window_status_style "none"
-          set -g @catppuccin_pane_status_enabled "off"
-          set -g @catppuccin_pane_border_status "off"
-        '';
-      }
+      # catppuccin/tmux v2 (nixpkgs 2.1.3) is NOT added as a plugin entry:
+      # its run-shell wrapper (catppuccin.tmux) fails under tmux 3.6a
+      # (`returned 1`, @thm_* palette never set). Verified that sourcing the
+      # two confs directly works (@thm_bg resolves). So catppuccin is loaded
+      # via explicit source-file from the store path at the TOP of the
+      # top-level extraConfig below, before the @thm_*-dependent styling.
     ];
 
     # Everything not expressible via structured options, preserved verbatim
     # from ~/.tmux.conf. Emitted by HM AFTER all plugins, so the @thm_*
     # references resolve against the loaded catppuccin theme.
     extraConfig = ''
+      # ---- catppuccin v2 (sourced directly; run-shell wrapper broken) ----
+      # Set options BEFORE sourcing so the theme/status confs pick them up.
+      set -g @catppuccin_flavor "mocha"
+      set -g @catppuccin_status_background "none"
+      set -g @catppuccin_window_status_style "none"
+      set -g @catppuccin_pane_status_enabled "off"
+      set -g @catppuccin_pane_border_status "off"
+      source-file ${catppuccinDir}/catppuccin_options_tmux.conf
+      source-file ${catppuccinDir}/catppuccin_tmux.conf
+
       # ---- terminal overrides (~/.tmux.conf lines 2-4) ----
       set -ga terminal-overrides ",*:Tc"
       set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm'

@@ -3,6 +3,7 @@
 {
   imports = [
     ../modules/shell/zsh.nix
+    ../modules/shell/tmux.nix
     ../modules/editor/neovim.nix
     ../modules/direnv.nix
     ../modules/cli.nix
