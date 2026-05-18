@@ -13,7 +13,13 @@
     let
       mkHome = { system, hostModule }:
         home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.${system};
+          # Scoped unfree allowance: only 1password-cli (op), needed by
+          # modules/secrets.nix. Not a blanket allowUnfree.
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfreePredicate = pkg:
+              builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
+          };
           modules = [ hostModule ];
         };
     in {

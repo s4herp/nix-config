@@ -8,6 +8,7 @@
     ../modules/direnv.nix
     ../modules/cli.nix
     ../modules/git.nix
+    ../modules/secrets.nix
   ];
 
   home.username = "saherpinero";
