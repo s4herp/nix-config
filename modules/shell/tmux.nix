@@ -153,7 +153,7 @@ in
       # ---- status bar base (legacy look, de-nested for tmux 3.6a) ----
       # tmux 3.6a does not expand the v1 `#{#[...]}` wrapper; the legacy
       # strings are reproduced verbatim with `#{#[STYLE]TEXT}` -> `#[STYLE]TEXT`.
-      set -g status-position top
+      set -g status-position bottom
       set -g status-style "bg=#{@thm_bg}"
       set -g status-justify "absolute-centre"
 
