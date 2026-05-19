@@ -3,22 +3,37 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Stable channel pinned solely to source neovim 0.11.x. nixos-unstable
+    # currently ships neovim 0.12 (dev branch) whose treesitter API break
+    # crashes pinned plugins (nvim-treesitter master, treesitter-context,
+    # render-markdown.nvim). See overlay in mkHome below.
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, nixpkgs-stable, home-manager, ... }:
     let
+      unfreePredicate = pkg:
+        builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
+
+      neovimStableOverlay = system: final: prev: {
+        neovim-unwrapped = (import nixpkgs-stable {
+          inherit system;
+          config.allowUnfreePredicate = unfreePredicate;
+        }).neovim-unwrapped;
+      };
+
       mkHome = { system, hostModule }:
         home-manager.lib.homeManagerConfiguration {
           # Scoped unfree allowance: only 1password-cli (op), needed by
           # modules/secrets.nix. Not a blanket allowUnfree.
           pkgs = import nixpkgs {
             inherit system;
-            config.allowUnfreePredicate = pkg:
-              builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
+            config.allowUnfreePredicate = unfreePredicate;
+            overlays = [ (neovimStableOverlay system) ];
           };
           modules = [ hostModule ];
         };

@@ -21,6 +21,21 @@
 # .config/nvim/ (on macOS the files already live in ~/.config/nvim, the
 # origin of the legacy ~/.cfg bare-repo).
 
+#
+# NEOVIM VERSION PIN (2026-05-19)
+# -------------------------------
+# `pkgs.neovim-unwrapped` is overlaid in flake.nix to the `nixos-25.05`
+# channel so we ship neovim 0.11.x instead of the 0.12 dev build that
+# nixos-unstable currently exposes. Rationale:
+#   * 0.12 changed the treesitter API (TSNode:range, LanguageTree internals)
+#     which crashes the plugin versions pinned in lazy-lock.json
+#     (nvim-treesitter master, nvim-treesitter-context, render-markdown.nvim).
+#   * The vendored lazy-lock.json is read-only via xdg.configFile, so a
+#     fast `:Lazy sync` recovery is not viable; pinning the binary is the
+#     conservative fix until the plugin set is migrated to nvim-treesitter
+#     `main` branch.
+# Remove the overlay once the lua tree is upgraded for 0.12.
+
 {
   programs.neovim = {
     enable = true; # pinned via HM/nixpkgs (flake.lock anchors the version)
