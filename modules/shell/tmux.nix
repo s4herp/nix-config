@@ -23,10 +23,34 @@
 # fetchFromGitHub (see ddzero2c/tmux-easymotion below).
 
 let
-  tmux-easymotion = pkgs.tmuxPlugins.mkTmuxPlugin {
+  # Build-time guard: fail the HM build if `path` does not exist. Returns
+  # `path` as a string on success so it can be inlined into source-file /
+  # run-shell directives below. Rationale: tmux silently no-ops a missing
+  # source-file / run-shell target (the error only shows under `tmux -v`),
+  # which is how the broken `rtpFilePath = "tmux-easymotion.tmux"` (upstream
+  # renamed the file to `easymotion.tmux`) stayed undetected. Any future
+  # upstream rename now breaks `home-manager switch` loudly instead.
+  assertFile = path:
+    let
+      str = toString path;
+      checked = pkgs.runCommandLocal "tmux-assert-${baseNameOf str}" { } ''
+        if [ ! -e "${str}" ]; then
+          echo "tmux config references missing file: ${str}" >&2
+          exit 1
+        fi
+        touch $out
+      '';
+    in
+    builtins.seq checked.outPath str;
+
+  # Vendored plugin. mkTmuxPlugin emits a `run-shell` referencing
+  # `$out/share/tmux-plugins/$pluginName/$rtpFilePath`; if that file is not
+  # in `src`, tmux silently skips it. The postBuild assertion below makes
+  # that mismatch a hard build error.
+  tmux-easymotion = (pkgs.tmuxPlugins.mkTmuxPlugin {
     pluginName = "tmux-easymotion";
     version = "0-unstable-2026-05-18";
-    rtpFilePath = "tmux-easymotion.tmux";
+    rtpFilePath = "easymotion.tmux";
     src = pkgs.fetchFromGitHub {
       owner = "ddzero2c";
       repo = "tmux-easymotion";
@@ -35,7 +59,15 @@ let
       rev = "c295db09a92e3f6db1e10879b8bc4d351d8917eb";
       hash = "sha256-3Yn8/W13Zr7HzUdRlsjBS+/WtoG0JsyTEWKePhny9bI=";
     };
-  };
+  }).overrideAttrs (old: {
+    postBuild = (old.postBuild or "") + ''
+      target="$out/share/tmux-plugins/tmux-easymotion/easymotion.tmux"
+      if [ ! -e "$target" ]; then
+        echo "mkTmuxPlugin: rtpFilePath does not exist in plugin output: $target" >&2
+        exit 1
+      fi
+    '';
+  });
   # catppuccin v2 conf dir (sourced directly; its run-shell wrapper is broken
   # under tmux 3.6a). Mirrors what catppuccin.tmux does: source options then
   # the main conf (which itself sources themes/catppuccin_<flavor>_tmux.conf).
@@ -120,8 +152,8 @@ in
       # overriding our own status-style.
       set -g @catppuccin_flavor "mocha"
       set -g @catppuccin_status_background "none"
-      source-file ${catppuccinDir}/catppuccin_options_tmux.conf
-      source-file ${catppuccinDir}/catppuccin_tmux.conf
+      source-file ${assertFile "${catppuccinDir}/catppuccin_options_tmux.conf"}
+      source-file ${assertFile "${catppuccinDir}/catppuccin_tmux.conf"}
 
       # ---- terminal overrides (~/.tmux.conf lines 2-4) ----
       # tmux >=3.2 deprecated `Tc`; the RGB terminal-feature is what enables
@@ -203,8 +235,8 @@ in
       # their one-shot placeholder substitution applies (legacy icons) ----
       set -g @online_icon "ok"
       set -g @offline_icon "nok"
-      run-shell ${onlineTmux}
-      run-shell ${batteryTmux}
+      run-shell ${assertFile onlineTmux}
+      run-shell ${assertFile batteryTmux}
     '';
   };
 }
