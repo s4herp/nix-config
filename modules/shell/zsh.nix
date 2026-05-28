@@ -16,7 +16,10 @@
   # Not in the dotfiles repo nor ~/.cfg; vendored here to close the
   # reproducibility hole (Bazzite would otherwise have no prompt config).
   # zsh.nix's initContent already sources ~/.p10k.zsh if present.
-  home.file.".p10k.zsh".source = ../../p10k.zsh;
+  home.file.".p10k.zsh".source = builtins.path {
+    path = ../../p10k.zsh;
+    name = "p10k-zsh";
+  };
 
   programs.zsh = {
     enable = true;

@@ -16,34 +16,35 @@
 
   outputs = { self, nixpkgs, nixpkgs-stable, home-manager, ... }:
     let
+      # Scoped unfree allowance: only 1password-cli (op), needed by
+      # modules/secrets.nix. Not a blanket allowUnfree.
       unfreePredicate = pkg:
         builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
 
-      neovimStableOverlay = system: final: prev: {
-        neovim-unwrapped = (import nixpkgs-stable {
+      # Centralized, reproducible nixpkgs import. Explicit `overlays`
+      # prevents impure reads of ~/.config/nixpkgs/overlays.* (nix.dev
+      # best practice).
+      mkPkgs = nixpkgsInput: system: extraOverlays:
+        import nixpkgsInput {
           inherit system;
-          config.allowUnfreePredicate = unfreePredicate;
-        }).neovim-unwrapped;
+          config = { allowUnfreePredicate = unfreePredicate; };
+          overlays = extraOverlays;
+        };
+
+      neovimStableOverlay = system: final: prev: {
+        neovim-unwrapped =
+          (mkPkgs nixpkgs-stable system [ ]).neovim-unwrapped;
       };
 
       mkHome = { system, hostModule }:
         home-manager.lib.homeManagerConfiguration {
-          # Scoped unfree allowance: only 1password-cli (op), needed by
-          # modules/secrets.nix. Not a blanket allowUnfree.
-          pkgs = import nixpkgs {
-            inherit system;
-            config.allowUnfreePredicate = unfreePredicate;
-            overlays = [ (neovimStableOverlay system) ];
-          };
+          pkgs = mkPkgs nixpkgs system [ (neovimStableOverlay system) ];
           modules = [ hostModule ];
         };
+
       systems = [ "aarch64-darwin" "x86_64-linux" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system:
-        f (import nixpkgs {
-          inherit system;
-          config.allowUnfreePredicate = pkg:
-            builtins.elem (nixpkgs.lib.getName pkg) [ "1password-cli" ];
-        }));
+      forAllSystems = f: nixpkgs.lib.genAttrs systems
+        (system: f (mkPkgs nixpkgs system [ ]));
       beamSets = pkgs: import ./devshells/beam.nix { inherit pkgs; };
     in {
       homeConfigurations."saher@macbook" = mkHome {

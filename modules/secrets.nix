@@ -15,7 +15,10 @@
 
 let
   # Pointer template tracked in VCS; copied into the store (no secret values).
-  secretsTpl = ../secrets/secrets.tpl;
+  secretsTpl = builtins.path {
+    path = ../secrets/secrets.tpl;
+    name = "secrets-tpl";
+  };
 
   secrets-refresh = pkgs.writeShellScriptBin "secrets-refresh" ''
     set -eu

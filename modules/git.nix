@@ -12,25 +12,35 @@
 # config /opt/homebrew/etc/gitconfig. The PATH fix makes the Nix git win,
 # which does NOT read that file, so the helper is declared here explicitly or
 # credential storage silently breaks.
+#
+# HM 25.05+ renamed:
+#   programs.git.userName    -> programs.git.settings.user.name
+#   programs.git.userEmail   -> programs.git.settings.user.email
+#   programs.git.extraConfig -> programs.git.settings
+# `signing.{key,signByDefault}` remain top-level options. `signing.format`
+# must be set explicitly (GPG no longer default for stateVersion >= 25.05).
 
 {
   programs.git = {
     enable = true;
 
-    # Global identity = personal (default outside ~/dev/shinkansen/).
     # Single GPG key for both identities (the only key present).
-    userName = "Saher Piñero";
-    userEmail = "saherp145@gmail.com";
     signing = {
+      format = "openpgp";
       key = "BF390DAAE816840D";
-      signByDefault = true; # commit.gpgsign = true
+      signByDefault = true; # commit.gpgsign / tag.gpgsign = true
     };
 
     # core.excludesfile = ~/.gitignore_global (contents: .DS_Store).
     # HM manages this via its own excludes file.
     ignores = [ ".DS_Store" ];
 
-    extraConfig = {
+    settings = {
+      # Global identity = personal (default outside ~/dev/shinkansen/).
+      user = {
+        name = "Saher Piñero";
+        email = "saherp145@gmail.com";
+      };
       init.defaultBranch = "main";
       tag.sort = "-version:refname";
       branch.sort = "-committerdate";

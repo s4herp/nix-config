@@ -101,11 +101,13 @@ in
     # set -g default-terminal "tmux-256color" (line 1)
     terminal = "tmux-256color";
 
-    plugins = with pkgs.tmuxPlugins; [
+    # Scoped `let` (instead of `with pkgs.tmuxPlugins;`) per nix.dev best
+    # practice: keeps plugin names statically resolvable.
+    plugins = let tp = pkgs.tmuxPlugins; in [
       # set -g @plugin 'tmux-plugins/tmux-yank' (line 31)
-      yank
+      tp.yank
       # set -g @plugin 'sainnhe/tmux-fzf' (line 32)
-      tmux-fzf
+      tp.tmux-fzf
 
       # set -g @plugin 'ddzero2c/tmux-easymotion' (line 36) + key 's' (line 33)
       {
@@ -118,7 +120,7 @@ in
       # Extrakto: lines 45-47. @extrakto_open_tool path is macOS-specific
       # (/usr/bin/open); preserved verbatim. Revisit for Bazzite (xdg-open).
       {
-        plugin = extrakto;
+        plugin = tp.extrakto;
         extraConfig = ''
           set -g @extrakto_popup_size "50%"
           set -g @extrakto_open_tool "/usr/bin/open"
@@ -126,7 +128,7 @@ in
       }
 
       # set -g @plugin 'tmux-plugins/tmux-resurrect' (line 53)
-      resurrect
+      tp.resurrect
 
       # tmux-online-status + tmux-battery are NOT plugin entries: they
       # string-replace placeholders in status-right and HM would run them

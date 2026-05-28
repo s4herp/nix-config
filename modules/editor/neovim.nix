@@ -60,7 +60,12 @@
   # this repo in a FOLLOW-UP step (see "Vendoring steps" at the bottom of
   # this file); referencing it before it exists will fail `nix flake
   # show`, which is expected and intentional for this task's scope.
-  xdg.configFile."nvim".source = ../../nvim;
+  # `builtins.path` w/ explicit `name` (nix.dev best practice): keeps the
+  # store path name stable independent of the parent dir basename.
+  xdg.configFile."nvim".source = builtins.path {
+    path = ../../nvim;
+    name = "neovim-config";
+  };
 
   # Runtime deps the config expects on PATH. lazy.nvim clones plugins at
   # runtime (git), and Telescope/grep pickers need ripgrep + fd; the
