@@ -177,6 +177,15 @@ in
       bind-key k select-pane -U
       bind-key l select-pane -R
 
+      # ---- pane resize (uppercase H/J/K/L, repeatable within repeat-time) ----
+      # Chosen to avoid: lowercase h/j/k/l (nav), `s` (easymotion), `r` (reload),
+      # and tmux defaults (c/n/p/,/%/"/x/z/[/]/o/d/w/f/$). Step = 5 cells; -r
+      # lets you chain presses without re-pressing the prefix.
+      bind-key -r H resize-pane -L 5
+      bind-key -r J resize-pane -D 5
+      bind-key -r K resize-pane -U 5
+      bind-key -r L resize-pane -R 5
+
       # ---- copy-mode-vi selection bindings (lines 40-42) ----
       bind-key -T copy-mode-vi C-v send-keys -X begin-selection \; send-keys -X rectangle-toggle;
       bind-key -T copy-mode-vi v send-keys -X begin-selection;
