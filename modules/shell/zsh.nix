@@ -139,6 +139,7 @@
         [ -d "$HOME/.lmstudio/bin" ] && export PATH="$PATH:$HOME/.lmstudio/bin"
         [ -d "$HOME/.local/bin" ] && export PATH="$PATH:$HOME/.local/bin"
         [ -d "/opt/homebrew/opt/libpq/bin" ] && export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+        [ -d "$HOME/go/bin" ] && export PATH="$PATH:$HOME/go/bin"
 
         # 5. COMPLETION STYLES
         [[ ! -d ~/.zsh/cache ]] && mkdir -p ~/.zsh/cache
