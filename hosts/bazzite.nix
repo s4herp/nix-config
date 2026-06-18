@@ -15,5 +15,8 @@
   home.username = "saherpinero";
   home.homeDirectory = "/var/home/saherpinero";
   home.stateVersion = "26.05";
+  # See macbook.nix: silences the intentional unstable/master version
+  # mismatch warning.
+  home.enableNixpkgsReleaseCheck = false;
   programs.home-manager.enable = true;
 }

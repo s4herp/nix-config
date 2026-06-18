@@ -314,9 +314,11 @@
 
         # Secrets cache (§7): sourced if present; shell never breaks if absent.
         # The cache is materialized on demand by secrets-refresh (M3), never
-        # declared in HM, never in the nix store, never in VCS.
-        [ -r "''${TMPDIR:-/tmp}/ring/secrets" ] && source "''${TMPDIR:-/tmp}/ring/secrets"
-        [ -r "$HOME/.cache/ring/secrets" ] && source "$HOME/.cache/ring/secrets"
+        # declared in HM, never in the nix store, never in VCS. Path mirrors
+        # secrets.nix exactly (XDG_CACHE_HOME-aware, defaults to ~/.cache).
+        _secrets_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/ring/secrets"
+        [ -r "$_secrets_cache" ] && source "$_secrets_cache"
+        unset _secrets_cache
         # ~/.zsh_secrets retired: secrets now come from the op-injected cache
         # above (M3). ~/.zshrc.local kept as a local non-secret override.
         [ -f ~/.zshrc.local ] && source ~/.zshrc.local
