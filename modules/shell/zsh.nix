@@ -252,6 +252,27 @@
         tts() {
           "$HOME/Dev/tts-reader/.venv/bin/python" "$HOME/Dev/tts-reader/read_aloud.py" "$@"
         }
+        # gsfix: powerlevel10k usa gitstatusd (libgit2 1.1.0 vendorizada), que
+        # rechaza repos con extensions.worktreeConfig (no soportada hasta libgit2
+        # 1.5.0) y deja el branch sin mostrar. La extensión es un no-op cuando
+        # ningún worktree usa config per-worktree, así que la quitamos en ese caso.
+        # Ver romkatv/gitstatus#402. Correr dentro del repo afectado.
+        gsfix() {
+          if ! git rev-parse --git-dir > /dev/null 2>&1; then
+            echo "gsfix: no es un repo git"
+            return 1
+          fi
+          if [ "$(git config --get extensions.worktreeConfig)" != "true" ]; then
+            echo "gsfix: extensions.worktreeConfig no está seteada, nada que hacer"
+            return 0
+          fi
+          if [ -n "$(git config --worktree --list 2> /dev/null)" ]; then
+            echo "gsfix: hay config per-worktree en uso; NO se toca (quitarla rompería settings)"
+            return 1
+          fi
+          git config --unset extensions.worktreeConfig &&
+            echo "gsfix: extensions.worktreeConfig removida. Corré 'exec zsh' en los panes afectados."
+        }
 
         # 12. LAZY LOADING
         conda() {
