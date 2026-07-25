@@ -41,11 +41,6 @@
           pkgs = mkPkgs nixpkgs system [ (neovimStableOverlay system) ];
           modules = [ hostModule ];
         };
-
-      systems = [ "aarch64-darwin" "x86_64-linux" ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems
-        (system: f (mkPkgs nixpkgs system [ ]));
-      beamSets = pkgs: import ./devshells/beam.nix { inherit pkgs; };
     in {
       homeConfigurations."saher@macbook" = mkHome {
         system = "aarch64-darwin";
@@ -57,9 +52,11 @@
         hostModule = ./hosts/bazzite.nix;
       };
 
-      packages = forAllSystems (pkgs:
-        nixpkgs.lib.mapAttrs' (name: drv:
-          nixpkgs.lib.nameValuePair "beam-${name}" drv
-        ) (beamSets pkgs));
+      # devshells/ (beam sets + elixir devShell) removed 2026-07-24: zero
+      # consumers after two months — the monorail toolchain contract is asdf
+      # (.tool-versions) + devcontainers, and the deps/_build copy trick for
+      # review worktrees requires the exact same toolchain binaries, which a
+      # Nix shell would break. Recover from git history if a personal
+      # (non-monorail) project ever needs a pinned BEAM devShell.
     };
 }

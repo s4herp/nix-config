@@ -279,11 +279,19 @@ Cada módulo: editar → `nix build` → diff vs dotfile actual → probar en
 
 ### 5.4 Fase M3 — Secretos (ver §7)
 
-### 5.5 Fase M4 — devShells + direnv
+### 5.5 Fase M4 — devShells + direnv **[PARCIALMENTE SUPERADA 2026-07-24]**
 
 `devshells/elixir.nix` (Erlang/Elixir/Node/Postgres fijados) + `nix-direnv`
 `use flake` por proyecto. Convive con asdf del monorail (no lo reemplaza en el
 repo compartido).
+
+**Cierre:** direnv + nix-direnv quedan (el flujo del monorail los usa). Los
+devShells se **eliminaron** tras dos meses sin un solo consumidor: el contrato
+de toolchain del monorail es asdf (`.tool-versions`) + devcontainers, y el
+flujo de worktrees (copiar `deps/`/`_build/`) exige binarios idénticos de
+toolchain, incompatible con un shell Nix paralelo. asdf es la decisión
+definitiva para proyectos del monorail; recuperar `devshells/` de la historia
+de git solo si aparece un proyecto personal fuera del monorail.
 
 ### 5.6 Fase M5 — Cachix **[DESCARTADA 2026-07-24]**
 
