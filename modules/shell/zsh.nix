@@ -91,8 +91,6 @@
       # zoxide
       j = "z";
       ji = "zi";
-      # legacy bare-repo management (kept until ~/.cfg is archived in M6)
-      config = "git --git-dir=$HOME/.cfg/ --work-tree=$HOME";
     };
 
     initContent = lib.mkMerge [

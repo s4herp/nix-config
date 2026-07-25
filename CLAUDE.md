@@ -7,7 +7,8 @@
 
 Migración de los dotfiles de Saher (bare-repo `~/.cfg`) a **Nix flake + Home
 Manager standalone**, mismo entorno reproducible en **macOS** (Apple Silicon)
-y **Bazzite** (Fedora atómico). Reemplazará a `~/.cfg`.
+y **Bazzite** (Fedora atómico). `~/.cfg` quedó **archivado** (2026-07-24, tag
+`pre-nix-final` en s4herp/dotfiles); este repo es la única fuente de verdad.
 
 ## DOCUMENTO AUTORITATIVO (leer siempre primero)
 
