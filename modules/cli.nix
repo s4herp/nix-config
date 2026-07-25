@@ -44,21 +44,18 @@
     # neovim owned by modules/editor/neovim.nix (programs.neovim) — NOT here.
     inherit (pkgs) jq httpie graphviz;
 
+    # Media (tools-report §3, formerly Homebrew):
+    #   imagemagick, ffmpeg, yt-dlp, whisper-cpp (attr was
+    #   openai-whisper-cpp before the nixpkgs rename).
+    inherit (pkgs) imagemagick ffmpeg yt-dlp whisper-cpp;
+
     # Editors / CLI:
     #   vim (legacy fallback editor).
     inherit (pkgs) vim;
 
-    # NOTE: the following tools-report §3 entries are intentionally NOT
-    # added here. They either have non-trivial/uncertain nixpkgs attrs to
-    # confirm before adding, or belong to other modules / are managed
-    # elsewhere:
-    #   gnupg          # TODO: verify nixpkgs attr (gnupg) — GPG signing;
-    #                  # likely belongs with git.nix signing setup, not cli.nix
-    #   imagemagick    # TODO: verify nixpkgs attr (imagemagick)
-    #   ffmpeg         # TODO: verify nixpkgs attr (ffmpeg / ffmpeg_7)
-    #   whisper-cpp    # TODO: verify nixpkgs attr (whisper-cpp / openai-whisper-cpp)
-    #   yt-dlp         # TODO: verify nixpkgs attr (yt-dlp)
-    #   redis          # TODO: verify nixpkgs attr (redis) — runtime service,
-    #                  # likely out of HM CLI scope (managed via docker today)
+    # Remaining tools-report §3 entries, resolved:
+    #   gnupg  -> modules/git.nix (hard dependency of commit signing)
+    #   redis  -> NOT added: runtime service, runs in docker, out of HM
+    #             CLI scope (same rationale as the header note above)
   };
 }

@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 # Native Home Manager rewrite of the live ~/.gitconfig (decision D3). The
 # dotfiles repo deliberately excludes git config + per-identity files + the
@@ -21,6 +21,11 @@
 # must be set explicitly (GPG no longer default for stateVersion >= 25.05).
 
 {
+  # gnupg lives here (not cli.nix) because signing is git's hard dependency:
+  # signByDefault = true means every commit needs gpg on PATH. pinentry stays
+  # on Homebrew (pinentry-mac; gpg-agent.conf points at its absolute path).
+  home.packages = [ pkgs.gnupg ];
+
   programs.git = {
     enable = true;
 
