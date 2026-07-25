@@ -285,16 +285,28 @@ Cada módulo: editar → `nix build` → diff vs dotfile actual → probar en
 `use flake` por proyecto. Convive con asdf del monorail (no lo reemplaza en el
 repo compartido).
 
-### 5.6 Fase M5 — Cachix
+### 5.6 Fase M5 — Cachix **[DESCARTADA 2026-07-24]**
 
 Binary cache (push desde macOS) para que Bazzite, cuando se desbloquee, **no
 recompile** el toolchain.
 
-### 5.7 Fase M6 — Estabilización
+**Decisión: no se hace.** Config personal sin CI, un solo host activo y
+Bazzite bloqueado sin fecha (§6): el beneficio no justifica operar un cache.
+Reabrir únicamente si Bazzite se desbloquea y la recompilación inicial
+resulta prohibitiva en la práctica.
+
+### 5.7 Fase M6 — Estabilización **[COMPLETADA 2026-07-24]**
 
 Días de uso real. Cuando haya confianza: archivar `~/.cfg` (NO borrar; mover a
 `~/.cfg.archived-YYYYMMDD`). `zsh-bench` para confirmar que la latencia de
 arranque no regresó (objetivo documentado: <100ms p10k).
+
+**Cierre:** el archivado se hizo vía git en lugar de mover el directorio:
+tag `pre-nix-final` preserva el último estado completo, el tip de `main`
+quedó reducido a un README de migración, y ambos están pusheados a
+`s4herp/dotfiles`. `~/.cfg` permanece en disco como git-dir archivado. El
+alias `config` fue retirado de `modules/shell/zsh.nix`, y ghostty (último
+archivo rastreado fuera de HM) pasó a `modules/ghostty.nix`.
 
 ---
 
