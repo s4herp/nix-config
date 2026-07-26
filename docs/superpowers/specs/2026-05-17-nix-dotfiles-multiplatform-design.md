@@ -138,7 +138,7 @@ nix-config/
   battery), `tmux-256color` + true color.
 - **`git.nix` (nativo completo):** `programs.git` con firma GPG
   (`signing.signByDefault`), `includes`/`includeIf` para identidades
-  condicionales por directorio (shinkansen / mudango), `init.defaultBranch`,
+  condicionales por directorio (shinkansen), `init.defaultBranch`,
   `url.insteadOf` SSH, excludes globales.
 - **`editor/neovim.nix` (nativo-pragmático, opción 2b aprobada):** Home Manager
   instala y **fija** Neovim; el árbol de config lua se entrega vía

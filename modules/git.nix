@@ -4,8 +4,7 @@
 # dotfiles repo deliberately excludes git config + per-identity files + the
 # GPG key (dossier §4, "Vacío deliberado"), so the spec §6.3 only pins the
 # MECHANISM. The concrete values below were read from the live macOS host:
-#   ~/.gitconfig, ~/.gitconfig-shinkansen, ~/.gitconfig-mudango,
-#   ~/.gitignore_global
+#   ~/.gitconfig, ~/.gitconfig-shinkansen, ~/.gitignore_global
 # as the dossier instructs ("read the real values from the live host").
 #
 # NOTE: credential.helper=osxkeychain previously came from Homebrew's system
@@ -64,8 +63,8 @@
       mergetool.sourcetree.trustExitCode = true;
     };
 
-    # Work identity, scoped to the shinkansen worktree dir (mudango removed,
-    # no longer working there). Same GPG key, work email.
+    # Work identity, scoped to the shinkansen worktree dir. Same GPG key,
+    # work email.
     includes = [
       {
         condition = "gitdir:~/dev/shinkansen/";

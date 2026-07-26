@@ -70,7 +70,7 @@ Fuente: informe `~/Downloads/2026-05-17-herramientas-de-desarrollo.md`.
   Catppuccin mocha, TPM, resurrect, easymotion, extrakto), `~/.config/nvim`
   (kickstart-style, lazy.nvim ~50 plugins, ElixirLS, Telescope, Harpoon),
   `~/.config/ghostty/config`, `~/.config/git/config` (firma GPG
-  `BF390DAAE816840D`, identidades condicionales shinkansen/mudango).
+  `BF390DAAE816840D`, identidad condicional shinkansen).
 - **Secretos hoy:** `~/.zsh_secrets`, `~/.zshrc.local` (cargados si existen),
   token de Raycast.
 - **Apps GUI (fuera de alcance Nix):** Karabiner-Elements (Caps→Hyper), Raycast
@@ -128,7 +128,7 @@ Fuente: informe `~/Downloads/2026-05-17-herramientas-de-desarrollo.md`.
   aquí). En macOS ya es accesible (es el origen del bare-repo); desde Bazzite,
   vía `gh` autenticado como `s4herp`.
 - **Vacío deliberado:** el repo **NO contiene `~/.config/git/config`** ni
-  `.gitconfig-shinkansen`/`.gitconfig-mudango` ni la clave GPG (excluidos por
+  `.gitconfig-shinkansen` ni la clave GPG (excluidos por
   secretos). → El módulo `git.nix` se **escribe a mano** desde los valores
   documentados en el spec §6.3 (firma GPG `BF390DAAE816840D`, includes
   condicionales por directorio, `url.insteadOf` SSH), no se deriva del repo.
@@ -264,7 +264,7 @@ Reescritura nativa (D3/D4), tomando como referencia el clon de
   navegación `h/j/k/l`, plugins (tmux-yank, tmux-fzf, easymotion, extrakto,
   resurrect, catppuccin mocha, online-status, battery), true color.
 - `git.nix`: `programs.git` — firma GPG `signByDefault`, `includes`/`includeIf`
-  shinkansen/mudango, `init.defaultBranch=main`, `url.insteadOf` SSH, excludes.
+  shinkansen, `init.defaultBranch=main`, `url.insteadOf` SSH, excludes.
   **Escrito a mano** (no está en el repo de dotfiles).
 - `editor/neovim.nix` (2b): HM instala/fija Neovim; vendoriza el árbol lua y lo
   entrega con `xdg.configFile."nvim".source`; `lazy-lock.json` commiteado

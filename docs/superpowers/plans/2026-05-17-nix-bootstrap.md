@@ -319,7 +319,7 @@ Bazzite with no macOS-side action.
 **Scope note:** the repo contains `.zshrc`, `.zshenv`, `.zprofile`,
 `.zsh_plugins.txt`, `.tmux.conf`, `.config/ghostty/config`, and
 `.config/nvim/`. It does **not** contain git config (`~/.config/git/config`,
-the shinkansen/mudango identities, the GPG key) — that was excluded for
+the shinkansen identity, the GPG key) — that was excluded for
 secrecy. Therefore `git.nix` in Plan 2 is authored from the documented values
 in spec §6.3, not derived from this reference.
 
