@@ -5,11 +5,17 @@
 # runtime). Source of truth: github.com/s4herp/dotfiles (on macOS the files
 # already live in $HOME, origin of the legacy ~/.cfg bare-repo).
 #
-# Machine/tool-specific bits (asdf, brew, conda/nvm lazy-load, OrbStack,
-# iTerm2, JetBrains, libpq, cargo, lmstudio) are preserved as guarded
-# conditionals: they no-op when the tool is absent, so the same module works
-# on macOS now and Bazzite later. asdf coexists with the monorail toolchain
-# (not replaced here; see dossier M4).
+# Machine/tool-specific bits (asdf, brew, OrbStack, iTerm2, libpq, cargo) are
+# preserved as guarded conditionals: they no-op when the tool is absent, so the
+# same module works on macOS now and Bazzite later. asdf coexists with the
+# monorail toolchain (not replaced here; see dossier M4).
+#
+# Dropped 2026-07-26, all pointing at things no longer on the machine:
+#   - conda/nvm lazy-load: miniconda3 and ~/.nvm are gone; python/ruby/node
+#     come from asdf and brew, and neither had been invoked in shell history
+#   - $HOME/.lmstudio/bin on PATH: LM Studio uninstalled
+#   - JetBrains Toolbox scripts on PATH: Toolbox not installed
+#   - tts(): pointed at ~/Dev/tts-reader, which does not exist
 
 {
   # Vendored Powerlevel10k config (1641 lines, p10k configure wizard output).
@@ -115,7 +121,6 @@
       ''
         # 3. ENVIRONMENT VARIABLES
         export GPG_TTY=$TTY
-        export NVM_DIR="$HOME/.nvm"
         export EDITOR="nvim"
         export VISUAL="nvim"
         export MANPAGER='nvim +Man!'
@@ -134,7 +139,6 @@
         ZSH_AUTOSUGGEST_ACCEPT_WIDGETS=(end-of-line vi-end-of-line vi-add-eol)
 
         # 4. PATH
-        [ -d "$HOME/.lmstudio/bin" ] && export PATH="$PATH:$HOME/.lmstudio/bin"
         [ -d "$HOME/.local/bin" ] && export PATH="$PATH:$HOME/.local/bin"
         [ -d "/opt/homebrew/opt/libpq/bin" ] && export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
         [ -d "$HOME/go/bin" ] && export PATH="$PATH:$HOME/go/bin"
@@ -247,9 +251,6 @@
           session=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | fzf --preview "tmux capture-pane -pt {}")
           [ -n "$session" ] && tmux attach-session -t "$session"
         }
-        tts() {
-          "$HOME/Dev/tts-reader/.venv/bin/python" "$HOME/Dev/tts-reader/read_aloud.py" "$@"
-        }
         # gsfix: powerlevel10k usa gitstatusd (libgit2 1.1.0 vendorizada), que
         # rechaza repos con extensions.worktreeConfig (no soportada hasta libgit2
         # 1.5.0) y deja el branch sin mostrar. La extensión es un no-op cuando
@@ -272,33 +273,7 @@
             echo "gsfix: extensions.worktreeConfig removida. Corré 'exec zsh' en los panes afectados."
         }
 
-        # 12. LAZY LOADING
-        conda() {
-          unset -f conda
-          local conda_bin="''${CONDA_HOME:-$HOME/miniconda3}/bin/conda"
-          __conda_setup="$("$conda_bin" 'shell.zsh' 'hook' 2> /dev/null)"
-          if [ $? -eq 0 ]; then
-            eval "$__conda_setup"
-          else
-            local conda_sh="''${CONDA_HOME:-$HOME/miniconda3}/etc/profile.d/conda.sh"
-            if [ -f "$conda_sh" ]; then
-              . "$conda_sh"
-            else
-              export PATH="''${CONDA_HOME:-$HOME/miniconda3}/bin:$PATH"
-            fi
-          fi
-          unset __conda_setup
-          conda "$@"
-        }
-        nvm() {
-          unset -f nvm
-          npm config delete prefix 2>/dev/null
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm "$@"
-        }
-
-        # 13. TMUX INTEGRATION
+        # 12. TMUX INTEGRATION
         if [[ -o interactive ]] && command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VIM" ] && [ -z "$VSCODE_INJECTION" ] && [[ -t 0 ]]; then
           if tmux list-sessions &>/dev/null; then
             exec tmux attach-session
@@ -315,8 +290,6 @@
         fi
 
         # .zprofile content (login-shell env, kept inline; guarded)
-        _jb_scripts="$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
-        [ -d "$_jb_scripts" ] && export PATH="$PATH:$_jb_scripts"
         [ -f "$HOME/.orbstack/shell/init.zsh" ] && source "$HOME/.orbstack/shell/init.zsh"
         [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
       ''

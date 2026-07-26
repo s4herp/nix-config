@@ -48,7 +48,7 @@ let
     case "$name" in
       *[!A-Za-z0-9_]*) echo "NAME must be [A-Za-z0-9_] (env var safe)" >&2; exit 2 ;;
     esac
-    repo="''${NIX_CONFIG_DIR:-$HOME/dev/shinkansen/local/nix-config}"
+    repo="''${NIX_CONFIG_DIR:-$HOME/Dev/nix-config}"
     tpl="$repo/secrets/secrets.tpl"
     [ -f "$tpl" ] || { echo "tpl not found: $tpl (set NIX_CONFIG_DIR)" >&2; exit 1; }
     op=${pkgs._1password-cli}/bin/op
@@ -105,7 +105,7 @@ let
     set -eu
     name="''${1:-}"
     [ -n "$name" ] || { echo "usage: secret-rm NAME" >&2; exit 2; }
-    repo="''${NIX_CONFIG_DIR:-$HOME/dev/shinkansen/local/nix-config}"
+    repo="''${NIX_CONFIG_DIR:-$HOME/Dev/nix-config}"
     tpl="$repo/secrets/secrets.tpl"
     op=${pkgs._1password-cli}/bin/op
     printf 'delete op item "%s" and its tpl pointer? [y/N] ' "$name" >&2
@@ -125,7 +125,7 @@ let
   # secret-ls: list the pointers currently declared (names only, no values).
   secret-ls = pkgs.writeShellScriptBin "secret-ls" ''
     set -eu
-    repo="''${NIX_CONFIG_DIR:-$HOME/dev/shinkansen/local/nix-config}"
+    repo="''${NIX_CONFIG_DIR:-$HOME/Dev/nix-config}"
     tpl="$repo/secrets/secrets.tpl"
     [ -f "$tpl" ] || { echo "no tpl at $tpl" >&2; exit 1; }
     grep -oE 'op://Personal/[A-Za-z0-9_]+/' "$tpl" | sed 's|op://Personal/||;s|/||' | sort

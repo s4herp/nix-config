@@ -54,20 +54,22 @@
       # Was provided by Homebrew's system gitconfig; declared here so the
       # Nix git keeps using the macOS keychain credential helper.
       credential.helper = "osxkeychain";
-      # Sourcetree diff/merge integration, preserved verbatim from
-      # ~/.gitconfig (no-op unless those tools are invoked).
-      difftool.sourcetree.cmd = "opendiff";
-      difftool.sourcetree.path = "";
-      mergetool.sourcetree.cmd =
-        "~/Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh";
-      mergetool.sourcetree.trustExitCode = true;
+      # The Sourcetree difftool/mergetool block carried over from ~/.gitconfig
+      # was dropped 2026-07-26: Sourcetree is not installed (neither
+      # /Applications nor ~/Applications), so the mergetool path was dead.
     };
 
     # Work identity, scoped to the shinkansen worktree dir. Same GPG key,
     # work email.
     includes = [
       {
-        condition = "gitdir:~/dev/shinkansen/";
+        # Capital D: the directory is ~/Dev. `gitdir:` matches case-SENSITIVELY
+        # (the case-insensitive form is `gitdir/i:`), and git resolves the
+        # gitdir through realpath, which returns the canonical "Dev" even on a
+        # case-insensitive APFS volume. With the old lowercase "~/dev/" this
+        # include never fired, so every commit under ~/Dev/shinkansen used the
+        # personal identity instead of the work one. Verified 2026-07-26.
+        condition = "gitdir:~/Dev/shinkansen/";
         contents.user = {
           name = "Saher Piñero";
           email = "saher.pinero@shinkansen.finance";

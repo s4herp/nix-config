@@ -17,7 +17,7 @@ El entorno macOS ya está migrado (M2 completo, generación 12). Los dotfiles
 `~/.config/git/config`, `~/.p10k.zsh`) son symlinks read-only al `/nix/store`.
 No se editan a mano: se edita el repo y se reconstruye.
 
-Repo de trabajo: `~/dev/shinkansen/local/nix-config`. Target del flake:
+Repo de trabajo: `~/Dev/nix-config`. Target del flake:
 `.#"saher@macbook"`. Antes de cualquier comando `nix`/`home-manager` en una
 shell nueva:
 
@@ -68,7 +68,7 @@ secret-add NOMBRE --generate   # 1Password genera el valor
 Luego (el ciclo Nix es inherente, el script lo imprime):
 
 ```
-cd ~/dev/shinkansen/local/nix-config
+cd ~/Dev/nix-config
 git add secrets/secrets.tpl && git commit -m "secrets: add NOMBRE pointer"
 nix run home-manager/master -- switch -b backup --flake .#"saher@macbook"
 secrets-refresh                # regenera el caché; luego shell nueva
@@ -109,7 +109,7 @@ pasos: git commit, switch, borrar caché, secrets-refresh).
 `secrets.tpl` ni en ningún `.nix` (el store es world-readable).
 
 `NIX_CONFIG_DIR` override del path del repo si no es el default
-(`~/dev/shinkansen/local/nix-config`).
+(`~/Dev/nix-config`).
 
 ### Rollback
 
