@@ -47,7 +47,12 @@
     # Media (tools-report §3, formerly Homebrew):
     #   imagemagick, ffmpeg, yt-dlp, whisper-cpp (attr was
     #   openai-whisper-cpp before the nixpkgs rename).
-    inherit (pkgs) imagemagick ffmpeg yt-dlp whisper-cpp;
+    # deno: JavaScript runtime yt-dlp uses to solve YouTube's nsig/player
+    #   challenges. The nixpkgs yt-dlp already propagates its own deno by
+    #   store path, so this entry is not what makes extraction work; it is
+    #   here so `deno` is on PATH as a first-class tool (and so ad-hoc
+    #   `--js-runtimes deno` runs resolve without a homebrew/node fallback).
+    inherit (pkgs) imagemagick ffmpeg yt-dlp whisper-cpp deno;
 
     # Editors / CLI:
     #   vim (legacy fallback editor).
