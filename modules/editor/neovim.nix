@@ -22,11 +22,11 @@
 # origin of the legacy ~/.cfg bare-repo).
 
 #
-# NEOVIM VERSION PIN (2026-05-19)
-# -------------------------------
-# `pkgs.neovim-unwrapped` is overlaid in flake.nix to the `nixos-25.05`
-# channel so we ship neovim 0.11.x instead of the 0.12 dev build that
-# nixos-unstable currently exposes. Rationale:
+# NEOVIM VERSION PIN (2026-05-19, branch bumped 2026-07-25)
+# ---------------------------------------------------------
+# `pkgs.neovim-unwrapped` is overlaid in flake.nix to the `nixos-25.11`
+# channel so we ship neovim 0.11.x (0.11.7) instead of the 0.12 that
+# nixos-unstable exposes. Rationale:
 #   * 0.12 changed the treesitter API (TSNode:range, LanguageTree internals)
 #     which crashes the plugin versions pinned in lazy-lock.json
 #     (nvim-treesitter master, nvim-treesitter-context, render-markdown.nvim).

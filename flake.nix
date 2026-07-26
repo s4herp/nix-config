@@ -4,10 +4,18 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # Stable channel pinned solely to source neovim 0.11.x. nixos-unstable
-    # currently ships neovim 0.12 (dev branch) whose treesitter API break
-    # crashes pinned plugins (nvim-treesitter master, treesitter-context,
-    # render-markdown.nvim). See overlay in mkHome below.
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.05";
+    # ships neovim 0.12, whose treesitter API break crashes pinned plugins
+    # (nvim-treesitter master, treesitter-context, render-markdown.nvim).
+    # See overlay in mkHome below.
+    #
+    # Branch choice (2026-07-25): nixos-25.11 is the NEWEST branch still on
+    # neovim 0.11.x (0.11.7). Both older and newer are unusable here:
+    # nixos-25.05 is EOL and frozen since 2026-01-01 (stuck on 0.11.5),
+    # while nixos-26.05 has already moved to 0.12.4. 25.11 is itself EOL
+    # (frozen 2026-06-30) — there is no supported branch left on 0.11.x, so
+    # this pin has an expiry date: it must go away when the lua tree is
+    # migrated for 0.12.
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
