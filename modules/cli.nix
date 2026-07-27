@@ -2,7 +2,7 @@
 
 # CLI toolset as declarative home.packages (dossier §5.3 cli.nix bullet).
 # Authoritative tool inventory: §3 of the tools report
-# (~/Dev/shinkansen/useful-analysis/2026-05-17-herramientas-de-desarrollo.md,
+# (~/Dev/shinkansen/04-analysis/2026-05-17-herramientas-de-desarrollo.md,
 # dossier Appendix B). Replaces the Homebrew `brew leaves` set; language
 # runtimes stay on asdf (dossier M4, not duplicated here).
 #
