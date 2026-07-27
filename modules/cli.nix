@@ -58,6 +58,12 @@
     #   vim (legacy fallback editor).
     inherit (pkgs) vim;
 
+    # bashInteractive: macOS ships bash 3.2 (frozen at the last GPLv2
+    # release), which lacks associative arrays. Scripts with a
+    # `#!/usr/bin/env bash` shebang and `declare -A` — the monorail's
+    # releaser/run.sh among them — need 4+ on PATH ahead of /bin/bash.
+    inherit (pkgs) bashInteractive;
+
     # Remaining tools-report §3 entries, resolved:
     #   gnupg  -> modules/git.nix (hard dependency of commit signing)
     #   redis  -> NOT added: runtime service, runs in docker, out of HM
