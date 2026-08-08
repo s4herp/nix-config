@@ -10,7 +10,7 @@
 # Hack Nerd Font and MesloLGS NF were dropped into ~/Library/Fonts by hand
 # (the p10k installer's doing) and were the only fonts not owned by HM.
 #
-# The Nerd Font variant is not cosmetic: two consumers need the glyphs.
+# The NF (Nerd Font) build is not cosmetic: two consumers need the glyphs.
 #   - modules/shell/tmux.nix status-left/right (Material Design codepoints:
 #     wifi, calendar, clock, plus the battery icons substituted by
 #     tmuxPlugins.battery).
@@ -18,7 +18,10 @@
 # Ghostty embeds Symbols Nerd Font Mono as a fallback, so those glyphs render
 # even without this package, but the fallback is invisible to every other
 # consumer of the font (and to Bazzite later).
+#
+# maple-mono.NF ships a single fixed-width family ("Maple Mono NF"), so unlike
+# the nerd-fonts.* packages there is no Propo/Mono variant to pick between.
 
 {
-  home.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
+  home.packages = [ pkgs.maple-mono.NF ];
 }
