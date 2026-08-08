@@ -17,12 +17,15 @@
     # Installed by modules/fonts.nix. Ghostty's default is an embedded
     # JetBrains Mono NL, so leaving font-family unset means the terminal
     # silently depends on what the app bundle happens to ship.
-    font-family = Maple Mono NF
+    #
+    # "Mono" rather than the bare / "Propo" families: it forces every Nerd
+    # Font glyph into one cell. The proportional variants render the tmux
+    # status icons double-width, which shifts the `#[fg=...]│` separators in
+    # status-left/right out of alignment.
+    #
+    # No font-feature overrides needed: Source Code Pro ships no programming
+    # ligatures, so `->` and `!=` already render one glyph per character.
+    font-family = SauceCodePro Nerd Font Mono
     font-size = 14
-
-    # Ligatures left ON, unlike the rest of the config's bias toward literal
-    # rendering: the ligature set and the italics are most of what makes this
-    # family look different from a stock mono. To go back to strict
-    # one-glyph-per-character, add: font-feature = -calt / -liga / -dlig.
   '';
 }

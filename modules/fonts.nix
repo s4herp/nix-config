@@ -18,10 +18,7 @@
 # Ghostty embeds Symbols Nerd Font Mono as a fallback, so those glyphs render
 # even without this package, but the fallback is invisible to every other
 # consumer of the font (and to Bazzite later).
-#
-# maple-mono.NF ships a single fixed-width family ("Maple Mono NF"), so unlike
-# the nerd-fonts.* packages there is no Propo/Mono variant to pick between.
 
 {
-  home.packages = [ pkgs.maple-mono.NF ];
+  home.packages = [ pkgs.nerd-fonts.sauce-code-pro ];
 }
