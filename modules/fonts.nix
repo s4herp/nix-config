@@ -20,5 +20,5 @@
 # consumer of the font (and to Bazzite later).
 
 {
-  home.packages = [ pkgs.nerd-fonts.sauce-code-pro ];
+  home.packages = [ pkgs.nerd-fonts.geist-mono ];
 }

@@ -23,9 +23,11 @@
     # status icons double-width, which shifts the `#[fg=...]│` separators in
     # status-left/right out of alignment.
     #
-    # No font-feature overrides needed: Source Code Pro ships no programming
-    # ligatures, so `->` and `!=` already render one glyph per character.
-    font-family = SauceCodePro Nerd Font Mono
+    # Pairs with `theme = Vercel` above: Geist is Vercel's own typeface.
+    #
+    # Ligatures are left at their default (on). To render one glyph per
+    # character instead, add: font-feature = -calt / -liga / -dlig.
+    font-family = GeistMono Nerd Font Mono
     font-size = 14
   '';
 }
