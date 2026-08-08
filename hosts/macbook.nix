@@ -7,6 +7,7 @@
     ../modules/editor/neovim.nix
     ../modules/direnv.nix
     ../modules/ghostty.nix
+    ../modules/fonts.nix
     ../modules/cli.nix
     ../modules/git.nix
     ../modules/secrets.nix
