@@ -10,7 +10,7 @@
 # Hack Nerd Font and MesloLGS NF were dropped into ~/Library/Fonts by hand
 # (the p10k installer's doing) and were the only fonts not owned by HM.
 #
-# The NF (Nerd Font) build is not cosmetic: two consumers need the glyphs.
+# The Nerd Font variant is not cosmetic: two consumers need the glyphs.
 #   - modules/shell/tmux.nix status-left/right (Material Design codepoints:
 #     wifi, calendar, clock, plus the battery icons substituted by
 #     tmuxPlugins.battery).
@@ -20,5 +20,5 @@
 # consumer of the font (and to Bazzite later).
 
 {
-  home.packages = [ pkgs.nerd-fonts.geist-mono ];
+  home.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
 }
