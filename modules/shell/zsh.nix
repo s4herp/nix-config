@@ -100,10 +100,16 @@
       # gcloud identity, per shell. CLOUDSDK_CONFIG moves the WHOLE gcloud
       # directory -- active account, configurations, token cache and the
       # application_default_credentials.json that named configurations do not
-      # isolate. Unset (the default) is work; the ketobot checkout switches
-      # itself via .envrc, so these are only for ad-hoc shells elsewhere.
-      gcp-personal = "export CLOUDSDK_CONFIG=$HOME/.config/gcloud-ketobot";
-      gcp-work = "unset CLOUDSDK_CONFIG";
+      # isolate.
+      #
+      # Unset (the default directory, ~/.config/gcloud) is the PERSONAL
+      # account, and that direction is the whole point: being wrong by default
+      # has to cost a stray resource in a personal project, never unexplained
+      # activity on a corporate identity that someone else audits. Work is
+      # therefore never implicit -- it is reached from under ~/dev/shinkansen
+      # (direnv.nix) or by asking for it here.
+      gcp-work = "export CLOUDSDK_CONFIG=$HOME/.config/gcloud-work";
+      gcp-personal = "unset CLOUDSDK_CONFIG";
       gcp-who = "gcloud config get-value account";
     };
 
