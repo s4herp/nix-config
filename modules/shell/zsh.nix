@@ -97,6 +97,14 @@
       # zoxide
       j = "z";
       ji = "zi";
+      # gcloud identity, per shell. CLOUDSDK_CONFIG moves the WHOLE gcloud
+      # directory -- active account, configurations, token cache and the
+      # application_default_credentials.json that named configurations do not
+      # isolate. Unset (the default) is work; the ketobot checkout switches
+      # itself via .envrc, so these are only for ad-hoc shells elsewhere.
+      gcp-personal = "export CLOUDSDK_CONFIG=$HOME/.config/gcloud-ketobot";
+      gcp-work = "unset CLOUDSDK_CONFIG";
+      gcp-who = "gcloud config get-value account";
     };
 
     initContent = lib.mkMerge [
