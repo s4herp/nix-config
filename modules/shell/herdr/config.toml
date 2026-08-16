@@ -1,4 +1,5 @@
 [keys]
+cycle_pane_next = "prefix+shift+o"
 detach = "prefix+d"
 prefix = "ctrl+space"
 
@@ -8,3 +9,10 @@ new_cwd = "follow"
 [theme]
 auto_switch = false
 name = "catppuccin"
+
+[[keys.command]]
+command = "/Users/saherpinero/Dev/nix-config/modules/shell/herdr/extrakto.sh"
+height = "50%"
+key = "prefix+tab"
+type = "popup"
+width = "60%"
