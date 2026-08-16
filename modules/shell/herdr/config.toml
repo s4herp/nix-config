@@ -1,0 +1,10 @@
+[keys]
+detach = "prefix+d"
+prefix = "ctrl+space"
+
+[terminal]
+new_cwd = "follow"
+
+[theme]
+auto_switch = false
+name = "catppuccin"
