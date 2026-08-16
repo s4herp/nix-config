@@ -287,12 +287,23 @@
             echo "gsfix: extensions.worktreeConfig removida. Corré 'exec zsh' en los panes afectados."
         }
 
-        # 12. TMUX INTEGRATION
-        if [[ -o interactive ]] && command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VIM" ] && [ -z "$VSCODE_INJECTION" ] && [[ -t 0 ]]; then
-          if tmux list-sessions &>/dev/null; then
-            exec tmux attach-session
-          else
-            exec tmux new-session -s main
+        # 12. MULTIPLEXER INTEGRATION
+        # herdr owns the autostart while it is being evaluated against tmux
+        # (see modules/shell/herdr.nix). tmux stays installed and remains the
+        # fallback: herdr is NOT exec'd, so a missing binary or a non-zero
+        # exit drops back to a working shell instead of closing the window.
+        # $HERDR_SOCKET_PATH is herdr's in-pane marker, the $TMUX equivalent.
+        # To go back to tmux as the default, drop the herdr branch; `tm` keeps
+        # working from inside either one meanwhile.
+        if [[ -o interactive ]] && [ -z "$TMUX" ] && [ -z "$HERDR_SOCKET_PATH" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VIM" ] && [ -z "$VSCODE_INJECTION" ] && [[ -t 0 ]]; then
+          if command -v herdr &> /dev/null; then
+            herdr && exit
+          elif command -v tmux &> /dev/null; then
+            if tmux list-sessions &>/dev/null; then
+              exec tmux attach-session
+            else
+              exec tmux new-session -s main
+            fi
           fi
         fi
 

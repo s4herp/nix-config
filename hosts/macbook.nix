@@ -4,6 +4,7 @@
   imports = [
     ../modules/shell/zsh.nix
     ../modules/shell/tmux.nix
+    ../modules/shell/herdr.nix
     ../modules/editor/neovim.nix
     ../modules/direnv.nix
     ../modules/ghostty.nix
