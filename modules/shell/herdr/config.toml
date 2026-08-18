@@ -16,3 +16,12 @@ height = "50%"
 key = "prefix+tab"
 type = "popup"
 width = "60%"
+
+[ui.toast]
+delivery = "system"
+
+[ui]
+show_agent_labels_on_pane_borders = true
+
+[experimental]
+switch_ascii_input_source_in_prefix = true
