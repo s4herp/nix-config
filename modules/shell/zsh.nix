@@ -211,8 +211,9 @@
         # so nix-pinned tools (neovim/D4, cli.nix set) win over Homebrew.
         # `typeset -U path` (HM header) dedupes, keeping the front entry.
         path=("$HOME/.nix-profile/bin" /nix/var/nix/profiles/default/bin $path)
-        if [ -f "$HOME/.atuin/bin/env" ]; then
-          . "$HOME/.atuin/bin/env"
+        # atuin comes from cli.nix; never source ~/.atuin/bin/env, it prepends
+        # a stale installer copy to PATH and its sqlx migrations no longer match.
+        if command -v atuin &> /dev/null; then
           eval "$(atuin init zsh)"
         fi
         [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
